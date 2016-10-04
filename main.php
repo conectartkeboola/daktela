@@ -47,10 +47,4 @@ foreach ($in_records as $rowNum => $row) {
             $idfieldvalue++;
         }
     }
-    /*$out_users -> writeRow([
-        $row[0],
-        $row[1],
-        $row[0] * $multiplier,
-        strtoupper($row[1])
-    ]);*/
 }
