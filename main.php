@@ -23,14 +23,12 @@ $in_records = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables"
 $startId = 13;                      // ID sloupce v tabulce 'records', kde začínají hodnoty formulářových polí (číslováno od 0)
 $colsNum = count($in_records[0]);   // počet sloupců tabulky 'records'
 
-$fields = array();
 for ($i = $startId; $i < $colsNum; $i++) {
-    $fields[] = array(                                      // $fields ... 2D-pole
-                    "idfield"   =>  $i - $startId + 1,      // idfield = 1,2,3,...
-                    "title"     =>  $in_records[0][$i],     // názvy formulářových polí
-                    "idinstance"=>  1
-                );
-}
+    $out_fields -> writeRow([
+        $i - $startId + 1,      // idfield = 1,2,3,...
+        $in_records[0][$i],     // názvy formulářových polí
+        "idinstance"=>  1
+    ]);
 
 // zápis záznamů do výstupních souborů
 $idfieldvalue = 1;      // inkrementální index
