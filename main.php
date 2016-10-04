@@ -29,7 +29,7 @@ for ($i = $startId; $i < $colsNum; $i++) {
         $in_records[0][$i],     // názvy formulářových polí
         "idinstance"=>  1
     ]);
-
+}
 // zápis záznamů do výstupních souborů
 $idfieldvalue = 1;      // inkrementální index
 foreach ($in_records as $rowNum => $row) {
