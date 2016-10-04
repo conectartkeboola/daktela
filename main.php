@@ -21,7 +21,8 @@ $out_fieldValues -> writeRow(["idfieldvalue", "idrecord", "idfield", "value"]);
 $in_records = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_records.csv");
 
 // zápis záznamů do výstupních souborů
-$startId = 13;                      // ID sloupce v tabulce 'records', kde začínají hodnoty formulářových polí (číslováno od 0)
+$idInstance = 1;
+$startId = 13;          // ID sloupce v tabulce 'records', kde začínají hodnoty formulářových polí (číslováno od 0)
 $idfieldvalue = 1;      // inkrementální index
 foreach ($in_records as $rowNum => $row) {
     if ($rowNum == 0) {        
@@ -29,8 +30,8 @@ foreach ($in_records as $rowNum => $row) {
         for ($i = $startId; $i < $colsNum; $i++) {
             $out_fields -> writeRow([
                 $i - $startId + 1,      // idfield = 1,2,3,...
-                $in_records[0][$i],     // názvy formulářových polí
-                "idinstance"=>  1
+                $row[$i],     // názvy formulářových polí
+                $idInstance
             ]);
         }
     } else {
