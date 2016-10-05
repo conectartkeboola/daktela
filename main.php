@@ -35,7 +35,7 @@ foreach ($instances as $idInstance) {                                   // proch
             for ($i = $startId[$idInstance -1]; $i < $colsNum; $i++) {
                 $out_fields -> writeRow([
                     $i - $startId[$idInstance -1] + 1,                  // idfield = 1,2,3,...
-                    $row[$i],                                           // názvy formulářových polí
+                    ltrim(ltrim($row[$i], "form_"), "field_"),          // názvy formulářových polí (bez úvodního 'form_' resp. 'form_field')
                     $idInstance
                 ]);
             }
