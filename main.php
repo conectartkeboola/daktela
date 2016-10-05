@@ -27,26 +27,26 @@ foreach ($instances as $idInstance) {
 }   // názvy vstupních souborů:  in_records_1, in_records_2, ...
 
 // zápis záznamů do výstupních souborů (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
-foreach ($instances as $idInstance) {                           // procházení tabulek 'records' jednotlivých instancí Daktela
-    $idFieldValue = 1;          // inkrementální index pro hodnoty formulářových polí (pro každou instanci číslováno 1,2,3,...)
-    foreach (${"in_records_".$idInstance} as $rowNum => $row) { // ${"in_records_".$idInstance} ... $in_records_1, $in_records_2,...
-        if ($rowNum == 0) {                                     // hlavička tabulky 'records'
-            $colsNum = count($row);                             // počet sloupců tabulky 'records'
+foreach ($instances as $idInstance) {                                   // procházení tabulek 'records' jednotlivých instancí Daktela
+    $idFieldValue = 1;                  // inkrementální index pro hodnoty formulářových polí (pro každou instanci číslováno 1,2,3,...)
+    foreach (${"in_records_".$idInstance} as $rowNum => $row) {         // ${"in_records_".$idInstance} ... $in_records_1, $in_records_2,...
+        if ($rowNum == 0) {                                             // hlavička tabulky 'records'
+            $colsNum = count($row);                                     // počet sloupců tabulky 'records'
             for ($i = $startId[$idInstance -1]; $i < $colsNum; $i++) {
                 $out_fields -> writeRow([
-                    $i - $startId[$idInstance -1] + 1,          // idfield = 1,2,3,...
-                    $row[$i],                                   // názvy formulářových polí
+                    $i - $startId[$idInstance -1] + 1,                  // idfield = 1,2,3,...
+                    $row[$i],                                           // názvy formulářových polí
                     $idInstance
                 ]);
             }
         } else {        
-            for ($i = $startId; $i < $colsNum; $i++) {          // hodnoty v tabulce 'records'
-                if (!strlen($row[$i])) {continue;}              // formulářové pole nemá vyplněnou hodnotu               
-                $out_fieldValues -> writeRow([                  // formulářové pole má vyplněnou hodnotu  
-                    $idFieldValue,                              // uměle vytvořený inkrementální index (1,2,3,...)
-                    $row[0],                                    // idrecord
-                    $i - $startId[$idInstance -1] + 1,          // idfield = 1,2,3,...
-                    $row[$i]                                    // value (hodnota ve formulářovém poli)
+            for ($i = $startId[$idInstance -1]; $i < $colsNum; $i++) {  // hodnoty v tabulce 'records'
+                if (!strlen($row[$i])) {continue;}                      // formulářové pole nemá vyplněnou hodnotu               
+                $out_fieldValues -> writeRow([                          // formulářové pole má vyplněnou hodnotu  
+                    $idFieldValue,                                      // uměle vytvořený inkrementální index (1,2,3,...)
+                    $row[0],                                            // idrecord
+                    $i - $startId[$idInstance -1] + 1,                  // idfield = 1,2,3,...
+                    $row[$i]                                            // value (hodnota ve formulářovém poli)
                 ]);
                 $idFieldValue++;
 
