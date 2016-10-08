@@ -11,8 +11,23 @@ $config     = json_decode(file_get_contents($configFile), true);
 $instances  = array(1,2);   // ID instancí Daktela
 $startId    = array(13,13); // ID sloupce v tabulce 'records' jednotlivých instancí, kde začínají hodnoty formulářových polí (číslováno od 0)
 
+// struktura tabulek
+$tabs = array(
+    "fields"            =>  array ("idfield", "title", "idinstance"),
+    "fieldValues"       =>  array ("idfieldvalue", "idrecord", "idfield", "value"),
+    "records"           =>  array ("idrecord", "iduser", "idqueue", "idstatus", "number", "call_id", "edited", "created", "idinstance"),
+    "recordSnapshots"   =>  array ("idrecordsnapshot", "iduser", "idrecord", "idstatus", "call_id", "created", "created_by"),
+    "loginSessions"     =>  array ("idloginsession", "start_time", "end_time", "duration", "iduser"),
+    "pauseSessions"     =>  array ("idpausesession", "start_time", "end_time", "duration", "idpause", "iduser"),
+    "queueSessions"     =>  array ("idqueuesession", "start_time", "end_time", "duration", "idqueue", "iduser"),
+    "users"             =>  array ("iduser", "title", "idinstance", "email"),
+    "pauses"            =>  array ("idpause", "title", "idinstance", "type", "paid"),
+    "queues"            =>  array ("idqueue", "title", "idinstance", "idgroup"),
+    "statuses"          =>  array ("idstatus", "title", "status_call")
+);
+
 // seznam vstupních + výstupních CSV souborů, s kterými se pracuje individuálně pro každou instanci Daktely
-$filesForInstances = array("fields", "fieldValues", "records", "recordSnapshots", "loginSessions", "pauseSessions", "queueSessions", "users", "pauses", "queues", "statuses");
+$filesForInstances = array_keys($tabs);
 // seznam vstupních + výstupních CSV souborů společných pro všechny instance Daktely
 $filesCommon = array("groups", "instances");
 // seznam pouze vstupních CSV souborů
@@ -24,17 +39,9 @@ foreach (array_merge($filesForInstances, $filesCommon) as $file) {
 }
 
 // zápis hlaviček do výstupních souborů
-$out_fields         -> writeRow(["idfield", "title", "idinstance"]);
-$out_fieldValues    -> writeRow(["idfieldvalue", "idrecord", "idfield", "value"]);
-$out_records        -> writeRow(["idrecord", "iduser", "idqueue", "idstatus", "number", "call_id", "edited", "created", "idinstance"]);
-$out_recordSnapshots-> writeRow(["idrecordsnapshot", "iduser", "idrecord", "idstatus", "call_id", "created", "created_by"]);
-$out_loginSessions  -> writeRow(["idloginsession", "start_time", "end_time", "duration", "iduser"]);
-$out_pauseSessions  -> writeRow(["idpausesession", "start_time", "end_time", "duration", "idpause", "iduser"]);
-$out_queueSessions  -> writeRow(["idqueuesession", "start_time", "end_time", "duration", "idqueue", "iduser"]);
-$out_users          -> writeRow(["iduser", "title", "idinstance", "email"]);
-$out_pauses         -> writeRow(["idpause", "title", "idinstance", "type", "paid"]);
-$out_queues         -> writeRow(["idqueue", "title", "idinstance", "idgroup"]);
-$out_statuses       -> writeRow(["idstatus", "title", "status_call"]);
+foreach ($tabs as $tabName => $columns) {
+    ${"out_".$tabName} -> writeRow($columns);
+}
 
 // načtení vstupních souborů
 foreach ($instances as $idInst) {
