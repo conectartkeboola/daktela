@@ -59,7 +59,7 @@ foreach ($instances as $idInst) {
 // zápis záznamů do výstupních souborů
 
 function addInstPref ($idInst, $string) {                           // funkce prefixuje hodnotu atributu (string) 3-ciferným identifikátorem instance
-    if (!strlen($string)) {return "";} else {return sprintf("%03s", $idInst)."_".$string;} 
+    if (!strlen($string)) {return "";} else {return sprintf("%03s", $idInst)."-".$string;} 
 }
 
 // A) tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
