@@ -22,6 +22,8 @@ $out_users          =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARA
 $out_pauses         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_puses.csv");
 $out_queues         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_queues.csv");
 $out_statuses       =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_statuses.csv");
+$out_groups         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_groups.csv");
+$out_instances      =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_instances.csv");
 
 // zápis hlaviček do výstupních souborů
 $out_fields         -> writeRow(["idfield", "title", "idinstance"]);
@@ -48,7 +50,9 @@ foreach ($instances as $idInstance) {
     ${"in_pauses_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauses_"           .$idInstance.".csv");
     ${"in_queues_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queues_"           .$idInstance.".csv");
     ${"in_statuses_".$idInstance}       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_statuses_"         .$idInstance.".csv");
-    ${"in_queue-group_".$idInstance}    = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queue-group_"      .$idInstance.".csv");
+    $in_queue_group                     = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queue_group.csv");
+    $in_groups                          = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_groups.csv");
+    $in_instances                       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_instances.csv");
 }   
 
 // zápis záznamů do výstupních souborů (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
@@ -167,7 +171,7 @@ foreach ($instances as $idInstance) {                                   // proch
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
     // queues, queue-group → queues
-    foreach (${"in_queue-group_".$idInstance} as $idqueue => $idgroup) {
+    foreach ($in_queue_group as $idqueue => $idgroup) {
         $queue_group[$idqueue] = $idgroup;                  // uložení tabulky queue-group do 1D-pole (IDQUEUE SE BERE JAKO UNIKÁTNÍ PRO VŠECHNY INSTANCE - NEROZLIŠUJE INSTANCI)
     }
     foreach (${"in_queues_".$idInstance} as $rowNum => $row) {
@@ -187,6 +191,22 @@ foreach ($instances as $idInstance) {                                   // proch
             $row[0]."_".sprintf("%03s", $idInstance),       // idstatus doplněný zleva o _ID instance v 3-ciferném tvaru
             $row[2],    // title    
             ""          // status_call - NUTNO STANOVIT ALGORITMUS URČENÍ (HOVOROVÝ / NEHOVOROVÝ STAV, NULL = SYSTÉMOVÁ HODNOTA)
+        ]);
+    }
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------
+    // groups
+    foreach ($in_groups as $row) {
+        $out_groups -> writeRow([
+            $row[0],    // idgroup
+            $row[1]     // title    
+        ]);
+    }
+    // ------------------------------------------------------------------------------------------------------------------------------------------------------
+    // instances
+    foreach ($in_instances as $row) {
+        $out_instances -> writeRow([
+            $row[0],    // idinstance
+            $row[1]     // url
         ]);
     }
 }
