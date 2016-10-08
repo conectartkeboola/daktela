@@ -41,15 +41,15 @@ $out_statuses       -> writeRow(["idstatus", "title", "status_call"]);
 // načtení vstupních souborů
 foreach ($instances as $idInstance) {
     // názvy vstupních souborů:  in_records_1, in_records_2, ... apod.
-    ${"in_records_".$idInstance}        = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_records_"          .$idInstance.".csv");
-    ${"in_recordSnapshots_".$idInstance}= new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_recordSnapshots_"  .$idInstance.".csv");
-    ${"in_loginSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_loginSessions_"    .$idInstance.".csv");
-    ${"in_pauseSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauseSessions_"    .$idInstance.".csv");
-    ${"in_queueSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queueSessions_"    .$idInstance.".csv");
-    ${"in_users_".$idInstance}          = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_users_"            .$idInstance.".csv");
-    ${"in_pauses_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauses_"           .$idInstance.".csv");
-    ${"in_queues_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queues_"           .$idInstance.".csv");
-    ${"in_statuses_".$idInstance}       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_statuses_"         .$idInstance.".csv");
+    ${"in_records_".$idInstance}        = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_records_".$idInstance.".csv");
+    ${"in_recordSnapshots_".$idInstance}= new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_recordSnapshots_".$idInstance.".csv");
+    ${"in_loginSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_loginSessions_".$idInstance.".csv");
+    ${"in_pauseSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauseSessions_".$idInstance.".csv");
+    ${"in_queueSessions_".$idInstance}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queueSessions_".$idInstance.".csv");
+    ${"in_users_".$idInstance}          = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_users_".$idInstance.".csv");
+    ${"in_pauses_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauses_".$idInstance.".csv");
+    ${"in_queues_".$idInstance}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queues_".$idInstance.".csv");
+    ${"in_statuses_".$idInstance}       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_statuses_".$idInstance.".csv");
     $in_queue_group                     = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queue_group.csv");
     $in_groups                          = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_groups.csv");
     $in_instances                       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_instances.csv");
