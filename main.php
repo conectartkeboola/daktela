@@ -2,28 +2,26 @@
 require_once "vendor/autoload.php";
 
 // načtení konfiguračního souboru
-$dataDir    = getenv("KBC_DATADIR").DIRECTORY_SEPARATOR;
+$ds         = DIRECTORY_SEPARATOR;
+$dataDir    = getenv("KBC_DATADIR").$ds;
 $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
 
-// definice instancí Daktela
+// seznam instancí Daktela
 $instances  = array(1,2);   // ID instancí Daktela
 $startId    = array(13,13); // ID sloupce v tabulce 'records' jednotlivých instancí, kde začínají hodnoty formulářových polí (číslováno od 0)
 
+// seznam vstupních + výstupních CSV souborů, s kterými se pracuje individuálně pro každou instanci Daktely
+$filesForInstances = array("fields", "fieldValues", "records", "recordSnapshots", "loginSessions", "pauseSessions", "queueSessions", "users", "pauses", "queues", "statuses");
+// seznam vstupních + výstupních CSV souborů společných pro všechny instance Daktely
+$filesCommon = array("groups", "instances");
+// seznam pouze vstupních CSV souborů
+$filesInOnly = array("queue_group");
+
 // vytvoření výstupních souborů
-$out_fields         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_fields.csv");
-$out_fieldValues    =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_fieldValues.csv");
-$out_records        =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_records.csv");
-$out_recordSnapshots=   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_recordSnapshots.csv");
-$out_loginSessions  =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_loginSessions.csv");
-$out_pauseSessions  =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_pauseSessions.csv");
-$out_queueSessions  =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_queueSessions.csv");
-$out_users          =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_users.csv");
-$out_pauses         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_pauses.csv");
-$out_queues         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_queues.csv");
-$out_statuses       =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_statuses.csv");
-$out_groups         =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_groups.csv");
-$out_instances      =   new \Keboola\Csv\CsvFile($dataDir."out".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."out_instances.csv");
+foreach (array_merge($filesForInstances, $filesCommon) as $file) {
+    ${"out_".$file} =   new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
+}
 
 // zápis hlaviček do výstupních souborů
 $out_fields         -> writeRow(["idfield", "title", "idinstance"]);
@@ -40,26 +38,21 @@ $out_statuses       -> writeRow(["idstatus", "title", "status_call"]);
 
 // načtení vstupních souborů
 foreach ($instances as $idInst) {
-    // názvy vstupních souborů:  in_records_1, in_records_2, ... apod.
-    ${"in_records_".$idInst}        = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_records_".$idInst.".csv");
-    ${"in_recordSnapshots_".$idInst}= new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_recordSnapshots_".$idInst.".csv");
-    ${"in_loginSessions_".$idInst}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_loginSessions_".$idInst.".csv");
-    ${"in_pauseSessions_".$idInst}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauseSessions_".$idInst.".csv");
-    ${"in_queueSessions_".$idInst}  = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queueSessions_".$idInst.".csv");
-    ${"in_users_".$idInst}          = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_users_".$idInst.".csv");
-    ${"in_pauses_".$idInst}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_pauses_".$idInst.".csv");
-    ${"in_queues_".$idInst}         = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queues_".$idInst.".csv");
-    ${"in_statuses_".$idInst}       = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_statuses_".$idInst.".csv");
-    $in_queue_group                 = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_queue_group.csv");
-    $in_groups                      = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_groups.csv");
-    $in_instances                   = new Keboola\Csv\CsvFile($dataDir."in".DIRECTORY_SEPARATOR."tables".DIRECTORY_SEPARATOR."in_instances.csv");
-}   
+    // A) vstupní soubory generované individuálně pro každou instanci Daktely (názvy souborů: in_records_1, in_records_2, ... apod.)
+    foreach ($filesForInstances as $file) {
+        ${"in_".$file."_".$idInst} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$idInst.".csv");
+    }
+}
+// B) vstupní soubory společné pro všechny instance Daktely
+foreach (array_merge($filesCommon, $filesInOnly) as $file) {
+    ${"in_".$file} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file.".csv");
+}
 
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
 
-function addInstPref ($idInst, $string) {                           // funkce prefixuje hodnotu atributu (string) 3-ciferným identifikátorem instance
-    if (!strlen($string)) {return "";} else {return sprintf("%03s", $idInst)."-".$string;} 
+function addInstPref ($idInst, $string) {                           // funkce prefixuje hodnotu atributu (string) 4-ciferným identifikátorem instance
+    if (!strlen($string)) {return "";} else {return sprintf("%04s", $idInst)."-".$string;} 
 }
 
 // A) tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
