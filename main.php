@@ -73,7 +73,7 @@ foreach ($instances as $idInst) {                                   // procháze
             for ($i = $startId[$idInst -1]; $i < $colsNum; $i++) {
                 $out_fields -> writeRow([
                     addInstPref($idInst, $i-$startId[$idInst-1]+1), // idfield = <idInstance>_1, <idInstance>_2, ...
-                    ltrim(ltrim($row[$i], "form_"), "field_"),      // názvy formulářových polí (bez úvodního 'form_' resp. 'form_field')
+                    preg_replace(["/form_/","/field_/"],"",$row[$i]),// názvy formulářových polí (bez úvodního 'form_' resp. 'form_field')
                     $idInst
                 ]);
             }
