@@ -110,7 +110,7 @@ foreach ($instances as $idInst) {                                   // procháze
             addInstPref($idInst, $row[2]),                          // iduser  (doplněný zleva o _ID instance ve 4-ciferném tvaru)              
             addInstPref($idInst, $row[1]),                          // idrecord (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             addInstPref($idInst, $row[8]),                          // idstatus (doplněný zleva o _ID instance ve 4-ciferném tvaru)
-            "",                                                     // call_id - NUTNO STANOVIT ALGORITMUS URČENÍ (V DATECH EXTRAHOVANÝCH Z DAKTELY TENTO ATRIBUT NENÍ; POTŘEBUJEME HO K NĚČEMU?)
+            addInstPref($idInst, $row[12]),                         // call_id (doplněný zleva o _ID instance ve 4-ciferném tvaru) - přidáno doplněním do JSON extraktoru
             $row[10],                                               // created
             addInstPref($idInst, $row[11])                          // created_by (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
