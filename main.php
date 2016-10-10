@@ -45,24 +45,24 @@ foreach ($tabs as $tabName => $columns) {
 
 // načtení vstupních souborů
 foreach ($instances as $idInst) {
-    // A) vstupní soubory generované individuálně pro každou instanci Daktely (názvy souborů: in_records_1, in_records_2, ... apod.)
+    // [A] vstupní soubory generované individuálně pro každou instanci Daktely (názvy souborů: in_records_1, in_records_2, ... apod.)
     foreach ($filesForInstances as $file) {
         ${"in_".$file."_".$idInst} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$idInst.".csv");
     }
 }
-// B) vstupní soubory společné pro všechny instance Daktely
+// [B] vstupní soubory společné pro všechny instance Daktely
 foreach (array_merge($filesCommon, $filesInOnly) as $file) {
     ${"in_".$file} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file.".csv");
 }
 
 // ==========================================================================================================================================================
-// zápis záznamů do výstupních souborů
-
 function addInstPref ($idInst, $string) {                           // funkce prefixuje hodnotu atributu (string) 4-ciferným identifikátorem instance
     if (!strlen($string)) {return "";} else {return sprintf("%04s", $idInst)."-".$string;} 
 }
 
-// A) tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
+// zápis záznamů do výstupních souborů
+
+// [A] tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
 foreach ($instances as $idInst) {                                   // procházení tabulek jednotlivých instancí Daktela
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
     // records → records fiefds, fieldValues
@@ -79,10 +79,10 @@ foreach ($instances as $idInst) {                                   // procháze
             }
         } else {
             $out_records -> writeRow([
-                addInstPref($idInst, $row[0]),                      // idrecord doplněný zleva o _ID instance v 3-ciferném tvaru
-                addInstPref($idInst, $row[1]),                      // iduser               
-                addInstPref($idInst, $row[2]),                      // idqueue
-                addInstPref($idInst, $row[7]),                      // idstatus
+                addInstPref($idInst, $row[0]),                      // idrecord (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+                addInstPref($idInst, $row[1]),                      // iduser  (doplněný zleva o _ID instance ve 4-ciferném tvaru)              
+                addInstPref($idInst, $row[2]),                      // idqueue (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+                addInstPref($idInst, $row[7]),                      // idstatus (doplněný zleva o _ID instance ve 4-ciferném tvaru)
                 $row[5],                                            // number
                 $row[9],                                            // call_id
                 $row[10],                                           // edited
@@ -106,13 +106,13 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_recordSnapshots_".$idInst} as $rowNum => $row) { // ${"in_recordSnapshots_".$idInst} ... $in_recordSnapshots_1,...
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_recordSnapshots -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idrecordsnapshot doplněný zleva o _ID instance v 3-ciferném tvaru
-            addInstPref($idInst, $row[2]),                          // iduser               
-            addInstPref($idInst, $row[1]),                          // idrecord
-            addInstPref($idInst, $row[8]),                          // idstatus
+            addInstPref($idInst, $row[0]),                          // idrecordsnapshot (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+            addInstPref($idInst, $row[2]),                          // iduser  (doplněný zleva o _ID instance ve 4-ciferném tvaru)              
+            addInstPref($idInst, $row[1]),                          // idrecord (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+            addInstPref($idInst, $row[8]),                          // idstatus (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             "",                                                     // call_id - NUTNO STANOVIT ALGORITMUS URČENÍ (V DATECH EXTRAHOVANÝCH Z DAKTELY TENTO ATRIBUT NENÍ; POTŘEBUJEME HO K NĚČEMU?)
             $row[10],                                               // created
-            addInstPref($idInst, $row[11])                          // created_by
+            addInstPref($idInst, $row[11])                          // created_by (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -120,11 +120,11 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_loginSessions_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_loginSessions -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idloginsession doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idloginsession (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // start_time             
             $row[3],                                                // end_time
             $row[4],                                                // duration
-            addInstPref($idInst, $row[1])                           // iduser
+            addInstPref($idInst, $row[1])                           // iduser (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,12 +132,12 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_pauseSessions_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_pauseSessions -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idpausesession doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idpausesession (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // start_time             
             $row[3],                                                // end_time
             $row[4],                                                // duration
-            addInstPref($idInst, $row[5]),                          // idpause
-            addInstPref($idInst, $row[1])                           // iduser
+            addInstPref($idInst, $row[5]),                          // idpause (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+            addInstPref($idInst, $row[1])                           // iduser (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -145,12 +145,12 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_queueSessions_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_queueSessions -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idqueuesession doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idqueuesession (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // start_time             
             $row[3],                                                // end_time
             $row[4],                                                // duration
-            addInstPref($idInst, $row[5]),                          // idqueue
-            addInstPref($idInst, $row[1])                           // iduser
+            addInstPref($idInst, $row[5]),                          // idqueue (doplněný zleva o _ID instance ve 4-ciferném tvaru)
+            addInstPref($idInst, $row[1])                           // iduser (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_users_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_users -> writeRow([
-            addInstPref($idInst, $row[0]),                          // iduser doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // iduser (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[4],                                                // title    
             $idInst,                                                // idinstance
             $row[8]                                                 // email
@@ -169,7 +169,7 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_pauses_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_pauses -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idpause doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idpause (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // title    
             $idInst,                                                // idinstance
             $row[4],                                                // type
@@ -186,10 +186,10 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_queues_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_queues -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idqueue doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idqueue (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // title    
             $idInst,                                                // idinstance
-            addInstPref($idInst, $queue_group[$row[0]])             // idgroup
+            addInstPref($idInst, $queue_group[$row[0]])             // idgroup (doplněný zleva o _ID instance ve 4-ciferném tvaru)
         ]);
     }
     // ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,14 +197,14 @@ foreach ($instances as $idInst) {                                   // procháze
     foreach (${"in_statuses_".$idInst} as $rowNum => $row) {
         if ($rowNum == 0) {continue;}                               // vynechání hlavičky tabulky
         $out_statuses -> writeRow([
-            addInstPref($idInst, $row[0]),                          // idstatus doplněný zleva o _ID instance v 3-ciferném tvaru
+            addInstPref($idInst, $row[0]),                          // idstatus (doplněný zleva o _ID instance ve 4-ciferném tvaru)
             $row[2],                                                // title    
             ""                                                      // status_call - NUTNO STANOVIT ALGORITMUS URČENÍ (HOVOROVÝ / NEHOVOROVÝ STAV, NULL = SYSTÉMOVÁ HODNOTA)
         ]);
     }
 }
 // ==========================================================================================================================================================
-// B) tabulky společné pro všechny instance (nesestavené ze záznamů více instancí)
+// [B] tabulky společné pro všechny instance (nesestavené ze záznamů více instancí)
 // groups
 foreach ($in_groups as $row) {
     $out_groups -> writeRow([
