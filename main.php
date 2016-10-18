@@ -83,7 +83,8 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ")
     }
     $str1 = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str );
     $str2 = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str1);
-    return $str2;
+    $str3 = str_replace("\N", "", $str2);
+    return $str3;
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
