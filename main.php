@@ -115,7 +115,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["records","idrecord"]: $idRecord = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
-                    case ["records", "form"]:   foreach (json_decode($hodnota, true) as $key => $valArr) {
+                    case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
@@ -123,7 +123,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             addInstPref($instId, sprintf("%08s", $idFieldValue)),   // idfieldvalue (iiii-ffffffff)
                                                             $idRecord,          // idrecord
                                                             $fields[$key],      // idfield
-                                                            utf8_decode($val)   // value (vyplněné formulářové pole má hodnotu pod klíčem $valId)
+                                                            $val                // value (vyplněné formulářové pole má hodnotu pod klíčem $valId)
                                                         ]; 
                                                         $idFieldValue++;
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
