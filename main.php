@@ -60,14 +60,27 @@ $groupNameL = "[[";
 $groupNameR = "]]";
 // ==========================================================================================================================================================
 // funkce
-function addInstPref ($instId, $string) {       // funkce prefixuje hodnotu atributu (string) 4-ciferným identifikátorem instance
+function addInstPref ($instId, $string) {               // prefixování hodnoty atributu (string) 4-ciferným identifikátorem instance
     return !strlen($string) ? "" : sprintf("%04s", $instId)."-".$string;    // prefixují se jen vyplněné hodnoty (strlen > 0)
 }
-function groupNameSepar ($string) {             // funkce získá název skupiny jako řetězec ohraničený definovanými delimitery
+function groupNameSepar ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $groupNameL, $groupNameR;
     $match = [];
     preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];  // $match[1]obsahuje podřetězec ohraničený delimitery
+}
+function trim_all ($str, $what = NULL, $with = " ") {   // odebrání nadbytečných mezer a formátovacích znaků z řetězce
+    if ($what === NULL) {
+        //  Character      Decimal      Use
+        //  "\0"            0           Null Character
+        //  "\t"            9           Tab
+        //  "\n"           10           New line
+        //  "\x0B"         11           Vertical Tab
+        //  "\r"           13           New Line in Mac
+        //  " "            32           Space       
+        $what   = "\\x00-\\x20";    //all white-spaces and control chars
+    }   
+    return trim( preg_replace( "/[".$what."]+/", $with, $str), $what);
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
@@ -123,7 +136,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             addInstPref($instId, sprintf("%08s", $idFieldValue)),   // idfieldvalue (iiii-ffffffff)
                                                             $idRecord,          // idrecord
                                                             $fields[$key],      // idfield
-                                                            $val                // value (vyplněné formulářové pole má hodnotu pod klíčem $valId)
+                                                            trim_all($val)      // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
                                                         ]; 
                                                         $idFieldValue++;
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
