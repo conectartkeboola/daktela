@@ -29,7 +29,8 @@ $tabsInOut = [
 ];
 $tabsOutOnly = [
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
-    "groups"            =>  ["idgroup" => 1, "title" => 0]
+    "groups"            =>  ["idgroup" => 1, "title" => 0],
+    "instances"         =>  ["idinstance" => 0, "url" => 0]
     // 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 ];
 $tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
@@ -57,11 +58,11 @@ $groupNameR = "]]";
 function addInstPref ($instId, $string) {       // funkce prefixuje hodnotu atributu (string) 4-ciferným identifikátorem instance
     if (!strlen($string)) {return "";} else {return sprintf("%04s", $instId)."-".$string;}  // prefixují se jen vyplněné hodnoty (strlen > 0)
 }
-function groupNameSepar ($string) {            // funkce získá název skupiny jako řetězec ohraničený definovanými delimitery
+function groupNameSepar ($string) {             // funkce získá název skupiny jako řetězec ohraničený definovanými delimitery
     global $groupNameL, $groupNameR;
     $match = [];
-    preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);  // $match[1]obsahuje podřetězec ohraničený delimitery
-    return empty($match[1]) ?  "" : $match[1];
+    preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
+    return empty($match[1]) ?  "" : $match[1];  // $match[1]obsahuje podřetězec ohraničený delimitery
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
@@ -107,6 +108,8 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["fields", "name"]:    $fieldRow[name]    = $hodnota;  // název klíče záznamu do pole formulářových polí
                                                 break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
                     case ["records","idrecord"]: $idRecord = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                                                $colVals[] = $hodnota;
+                                                break;
                     case ["records", "form"]:   foreach (json_decode($hodnota, true) as $key=> $valArr) { // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (count($valArr) == 0) {continue;}            // nevyplněné form. pole neobsahuje žádný prvek
                                                     $valId = 0;                 // index vyplněné hodnoty form. pole (obvykle existuje jen index 0)
