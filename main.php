@@ -103,9 +103,9 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                 $out_groups -> writeRow($groupVals);   // zápis řádku do out-only tabulky 'groups'
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
-                                                $fieldRow[idfield] = $hodnota;  // hodnota záznamu do pole formulářových polí
+                                                $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
                                                 break;
-                    case ["fields", "name"]:    $fieldRow[name]    = $hodnota;  // název klíče záznamu do pole formulářových polí
+                    case ["fields", "name"]:    $fieldRow["name"]   = $hodnota; // název klíče záznamu do pole formulářových polí
                                                 break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
                     case ["records","idrecord"]: $idRecord = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
@@ -132,8 +132,8 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                 $columnId++;
                 // -----------------------------------------------------------------------------------------------------------------------------------------                
             }
-            if ( !(!strlen($fieldRow[idfield]) || !strlen($fieldRow[name])) ) { // je-li známý název klíče i hodnota záznamu do pole form. polí...
-                $fields[$fieldRow[name]] = $fieldRow[idfield];                  // ... provede se přidání záznamu ("name => idfield")
+            if ( !(!strlen($fieldRow["idfield"]) || !strlen($fieldRow["name"])) ) { // je-li známý název klíče i hodnota záznamu do pole form. polí...
+                $fields[$fieldRow["name"]] = $fieldRow["idfield"];                  // ... provede se přidání záznamu ("name => idfield")
             }    
             ${"out_".$table} -> writeRow($colVals);                             // zápis řádku do výstupní tabulky
         }
