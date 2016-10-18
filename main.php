@@ -46,7 +46,7 @@ foreach ($tabsAllList as $file) {
 }
 // zápis hlaviček do výstupních souborů
 foreach ($tabsAll as $tabName => $columns) {
-    $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), array_keys($colsInOnly[$tabName])) : array_keys($columns);
+    $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), $colsInOnly[$tabName]) : array_keys($columns);
     ${"out_".$tabName} -> writeRow($colsOut);
 }
 // načtení vstupních souborů
