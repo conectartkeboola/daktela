@@ -149,6 +149,6 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
 // [B] tabulky společné pro všechny instance (nesestavené ze záznamů více instancí)
 // instances
 foreach ($instances as $instId => $url) {
-    $out_instances -> writeRow([sprintf("%04s", $instId), $url]);
+    $out_instances -> writeRow([$instId, $url]);
 }
 ?>
