@@ -69,18 +69,21 @@ function groupNameSepar ($string) {                     // separace názvu skupi
     preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];  // $match[1]obsahuje podřetězec ohraničený delimitery
 }
-function trim_all ($str, $what = NULL, $with = " ") {   // odebrání nadbytečných mezer a formátovacích znaků z řetězce
+function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
-        //  Character      Decimal      Use
-        //  "\0"            0           Null Character
-        //  "\t"            9           Tab
-        //  "\n"           10           New line
-        //  "\x0B"         11           Vertical Tab
-        //  "\r"           13           New Line in Mac
-        //  " "            32           Space       
-        $what   = "\\x00-\\x20";    //all white-spaces and control chars
-    }   
-    return trim( preg_replace( "/[".$what."]+/", $with, $str), $what);
+        //  Character  Decimal  Hexa    Use
+        //  "\0"         0      \\x00   Null Character
+        //  "\t"         9      \\x09   Tab
+        //  "\n"        10      \\x0A   New line
+        //  "\x0B"      11      \\x0B   Vertical Tab
+        //  "\r"        13      \\x0D   New Line in Mac
+        //  " "         32      \\x20   Space       
+        $charsToThrow   = "\\x00-\\x09\\x0B-\\x20\\xFF";    // all white-spaces and control chars (hexa.)
+        $charsToReplace = "\\x0A";                          // new line
+    }
+    $str1 = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str );
+    $str2 = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str1);
+    return $str2;
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
