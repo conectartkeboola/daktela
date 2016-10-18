@@ -25,7 +25,7 @@ $tabsInOut = [
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
     "fields"            =>  ["idfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0],    
-    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>1,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0]    
+    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>1,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0,"form"=>0]    
 ];
 $tabsOutOnly = [
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
@@ -126,7 +126,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case [$table,"idinstance"]: $colVals[] = $instId;  break;   // hodnota = $instId
                     default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav
                 }
-                $i++;
+                $columnId++;
                 // -----------------------------------------------------------------------------------------------------------------------------------------                
             }
             if ( !(!strlen($fieldRow[idfield]) || !strlen($fieldRow[name])) ) { // je-li známý název klíče i hodnota záznamu do pole form. polí...
