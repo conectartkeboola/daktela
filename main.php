@@ -115,8 +115,9 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["records","idrecord"]: $idRecord = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
-                    case ["records", "form"]:   foreach (json_decode($hodnota, true) as $key=> $valArr) { // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
-                                                    if (count($valArr) == 0) {continue;}            // nevyplněné form. pole neobsahuje žádný prvek
+                    case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key=> $valArr) {
+                                                                                            // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
+                                                    if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
                                                     $valId = 0;                 // index vyplněné hodnoty form. pole (obvykle existuje jen index 0)
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
                                                         $fieldVals = [
