@@ -32,8 +32,8 @@ $tabsOutOnly = [
     "groups"            =>  ["idgroup" => 1, "title" => 0]
     // 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 ];
-$tabsAll        = array_merge($tabs, $tabsOutOnly);
-$tabsInOutList  = array_keys($tabs);
+$tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
+$tabsInOutList  = array_keys($tabsInOut);
 $tabsAllList    = array_keys($tabsAll);
 // vytvoření výstupních souborů
 foreach ($tabsAllList as $file) {
