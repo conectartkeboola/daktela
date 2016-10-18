@@ -33,6 +33,10 @@ $tabsOutOnly = [
     "instances"         =>  ["idinstance" => 0, "url" => 0]
     // 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 ];
+$colsInOnly = [         // seznam sloupců, které se nepropíší do výstupních tabulek (slouží jen k internímu zpracování)
+    "fields"            =>  ["name"],
+    "records"           =>  ["form"]
+];
 $tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
 $tabsInOutList  = array_keys($tabsInOut);
 $tabsAllList    = array_keys($tabsAll);
@@ -42,7 +46,8 @@ foreach ($tabsAllList as $file) {
 }
 // zápis hlaviček do výstupních souborů
 foreach ($tabsAll as $tabName => $columns) {
-    ${"out_".$tabName} -> writeRow(array_keys($columns));
+    $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), array_keys($colsInOnly[$tabName])) : array_keys($columns);
+    ${"out_".$tabName} -> writeRow($colsOut);
 }
 // načtení vstupních souborů
 foreach ($instancesIDs as $instId) {
@@ -56,7 +61,7 @@ $groupNameR = "]]";
 // ==========================================================================================================================================================
 // funkce
 function addInstPref ($instId, $string) {       // funkce prefixuje hodnotu atributu (string) 4-ciferným identifikátorem instance
-    if (!strlen($string)) {return "";} else {return sprintf("%04s", $instId)."-".$string;}  // prefixují se jen vyplněné hodnoty (strlen > 0)
+    return !strlen($string) ? "" : sprintf("%04s", $instId)."-".$string;    // prefixují se jen vyplněné hodnoty (strlen > 0)
 }
 function groupNameSepar ($string) {             // funkce získá název skupiny jako řetězec ohraničený definovanými delimitery
     global $groupNameL, $groupNameR;
@@ -125,7 +130,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
                                                     }    
                                                 }                                                
-                                                break;
+                                                break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"    
                     case [$table,"idinstance"]: $colVals[] = $instId;  break;   // hodnota = $instId
                     default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav
                 }
