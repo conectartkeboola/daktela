@@ -138,6 +138,8 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["records","idrecord"]:$idRecord = $hodnota;           // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
+                    case ["records", "number"]: $colVals[] = str_replace(" ", "", $hodnota);// veřejné tel. číslo (bez případných mezer)
+                                                break;
                     case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
