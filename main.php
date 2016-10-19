@@ -4,6 +4,8 @@ require_once "vendor/autoload.php";
 // načtení konfiguračního souboru
 $ds         = DIRECTORY_SEPARATOR;
 $dataDir    = getenv("KBC_DATADIR").$ds;
+
+// pro případ importu parametrů zadaných JSON kódem v definici PHP aplikace v KBC
 $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
 
@@ -34,12 +36,14 @@ $tabsOutOnly = [
     // 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 ];
 $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupních tabulek (slouží jen k internímu zpracování)
+ // "název_tabulky"     =>  ["název_sloupce_1", "název_sloupce_2, ...]
     "fields"            =>  ["name"],
     "records"           =>  ["form"]
 ];
 $tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
-$tabsInOutList  = array_keys($tabsInOut);
-$tabsAllList    = array_keys($tabsAll);
+$tabsInOutList  = array_keys ($tabsInOut);
+$tabsAllList    = array_keys ($tabsAll);
+
 // vytvoření výstupních souborů
 foreach ($tabsAllList as $file) {
     ${"out_".$file} =   new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
@@ -55,35 +59,37 @@ foreach ($instancesIDs as $instId) {
         ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
     }
 }
+
 // delimitery názvu skupiny v queues.idgroup
 $groupNameL = "[[";
 $groupNameR = "]]";
 // ==========================================================================================================================================================
 // funkce
+
 function addInstPref ($instId, $string) {               // prefixování hodnoty atributu (string) 4-ciferným identifikátorem instance
     return !strlen($string) ? "" : sprintf("%04s", $instId)."-".$string;    // prefixují se jen vyplněné hodnoty (strlen > 0)
 }
-function groupNameSepar ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
+function groupNameParse ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $groupNameL, $groupNameR;
     $match = [];
     preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
-    return empty($match[1]) ?  "" : $match[1];  // $match[1]obsahuje podřetězec ohraničený delimitery
+    return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
 function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
-        //  Character  Decimal  Hexa    Use
+        //  char    decimal     hexa    use
         //  "\0"         0      \\x00   Null Character
         //  "\t"         9      \\x09   Tab
         //  "\n"        10      \\x0A   New line
         //  "\x0B"      11      \\x0B   Vertical Tab
         //  "\r"        13      \\x0D   New Line in Mac
         //  " "         32      \\x20   Space       
-        $charsToThrow   = "\\x00-\\x09\\x0B-\\x20\\xFF";    // all white-spaces and control chars (hexa.)
-        $charsToReplace = "\\x0A";                          // new line
+        $charsToThrow   = "\\x00-\\x09\\x0B-\\x20\\xFF";// all white-spaces and control chars (hexa)
+        $charsToReplace = "\\x0A";                      // new line
     }
-    $str1 = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str );
-    $str2 = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str1);
-    $str3 = str_replace("\N", "", $str2);
+    $str1 = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str );     // náhrada prázdných a řídicích znaků mezerou
+    $str2 = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str1);     // náhrada odřádkování znakem "|" (vyskytují se i vícenásobná odřádkování)
+    $str3 = str_replace("\N", "", $str2);               // reliktní "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
     return $str3;
 }
 // ==========================================================================================================================================================
@@ -92,18 +98,18 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ")
 // [A] tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
 foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých instancí Daktela
     $idGroup      = 1;                  // inkrementální index pro číslování skupin (pro každou instanci číslováno 1,2,3,...)
-    $idFieldValue = 1;                  // inkrementální index pro hodnoty formulářových polí (pro každou instanci číslováno 1,2,3,...)
-    $fields = [];                       // pole formulářových polí (záznam má tvar "name => idfield")
+    $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí (pro každou instanci číslováno 1,2,3,...)
+    $fields = [];                       // pole formulářových polí (prvek pole má tvar "name => idfield")
     foreach ($tabsInOut as $table => $columns) {
-        foreach (${"in_".$table."_".$instId} as $rowNum => $row) {
+        foreach (${"in_".$table."_".$instId} as $rowNum => $row) {              // načítání řádků vstupních tabulek
             if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
-            $colVals   = [];                                                    // řádek tabulky
+            $colVals   = [];                                                    // řádek výstupní tabulky
             $groupVals = [];                                                    // záznam do out-only tabulky 'groups'
             $fieldRow  = [];                                                    // záznam do pole formulářových polí            
             $fieldVals = [];                                                    // záznam do out-only tabulky 'fieldValues'
-            unset($idRecord);    
-            $columnId  = 0;                                                     // index sloupce (0, 1, 2, ...)
-            foreach ($columns as $colName => $prefixVal) {                      // konstrukce řádku tabulky (vložení hodnot řádku)
+            unset($idRecord);                                                   // reset indexu záznamů do výstupní tabulky 'records'
+            $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
+            foreach ($columns as $colName => $prefixVal) {                      // konstrukce řádku výstupní tabulky (vložení hodnot řádku)
                 // -----------------------------------------------------------------------------------------------------------------------------------------
                 switch ($prefixVal) {
                     case 0: $hodnota = $row[$columnId]; break;                  // hodnota bez prefixu instance
@@ -111,13 +117,13 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                 }
                 // -----------------------------------------------------------------------------------------------------------------------------------------
                 switch ([$table, $colName]) {
-                    case ["queues", "idgroup"]: $groupName = groupNameSepar($hodnota);  // název skupiny separovaný z pole pomocí delimiterů
+                    case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);  // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                 if (!strlen($groupName)) {
-                                                    $colVals[] = "";
-                                                    break;}                     // název skupiny v tabulce 'queues' nevyplněn
-                                                $idGroupPrefixed = addInstPref($instId, sprintf("%04s", $idGroup));
+                                                    $colVals[] = "";  break;    // název skupiny v tabulce 'queues' nevyplněn                                               
+                                                }
+                                                $idGroupPrefixed = addInstPref($instId, $idGroup);
                                                 $groupVals = [
-                                                    $idGroupPrefixed,           // idgroup (iiii-gggg)
+                                                    $idGroupPrefixed,           // idgroup
                                                     $groupName                  // title (= název skupiny)
                                                 ];
                                                 $$idGroup++;
@@ -129,7 +135,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                 break;
                     case ["fields", "name"]:    $fieldRow["name"]   = $hodnota; // název klíče záznamu do pole formulářových polí
                                                 break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
-                    case ["records","idrecord"]: $idRecord = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                    case ["records","idrecord"]:$idRecord = $hodnota;           // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
                     case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
@@ -150,13 +156,13 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case [$table,"idinstance"]: $colVals[] = $instId;  break;   // hodnota = $instId
                     default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav
                 }
-                $columnId++;
+                $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku
                 // -----------------------------------------------------------------------------------------------------------------------------------------                
             }
             if ( !(!strlen($fieldRow["idfield"]) || !strlen($fieldRow["name"])) ) { // je-li známý název klíče i hodnota záznamu do pole form. polí...
                 $fields[$fieldRow["name"]] = $fieldRow["idfield"];                  // ... provede se přidání záznamu ("name => idfield")
             }    
-            ${"out_".$table} -> writeRow($colVals);                             // zápis řádku do výstupní tabulky
+            ${"out_".$table} -> writeRow($colVals);                             // zápis sestaveného řádku do výstupní tabulky
         }
     }        
 }
