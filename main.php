@@ -137,7 +137,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                     if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
                                                         $fieldVals = [
-                                                            addInstPref($instId, sprintf("%08s", $idFieldValue)),   // idfieldvalue (iiii-ffffffff)
+                                                            addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,          // idrecord
                                                             $fields[$key],      // idfield
                                                             trim_all($val)      // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
