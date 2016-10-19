@@ -75,6 +75,10 @@ function groupNameParse ($string) {                     // separace názvu skupi
     preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
+function phoneNumberCanonic ($str) {                    // konverze formátu veřejných tel. čísel na tvar bez mezer (\\x20), "+" (\\x2B) a úvodních nul (ltrim)
+    $strConvert = ltrim(preg_replace("/[\\x20\\x2B]/", "", $str), "0");
+    return (strlen($strConvert) == 9 ? "420" : "") . $strConvert;
+}
 function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
         //  char    decimal     hexa    use
@@ -138,7 +142,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["records","idrecord"]:$idRecord = $hodnota;           // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
-                    case ["records", "number"]: $colVals[] = str_replace(" ", "", $hodnota);// veřejné tel. číslo (bez případných mezer)
+                    case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                 break;
                     case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
