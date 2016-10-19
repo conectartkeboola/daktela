@@ -75,8 +75,8 @@ function groupNameParse ($string) {                     // separace názvu skupi
     preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
-function phoneNumberCanonic ($str) {                    // konverze formátu veřejných tel. čísel na tvar bez mezer (\\x20), "+" (\\x2B) a úvodních nul (ltrim)
-    $strConvert = ltrim(preg_replace("/[\\x20\\x2B]/", "", $str), "0");
+function phoneNumberCanonic ($str) {                    // veřejná tel. čísla omezená na číslice 0-9 (48-57D = 30-39H), bez úvodních nul (ltrim)
+    $strConvert = ltrim(preg_replace("/[\\x00-\\x2F\\x3A-\\xFF]/", "", $str), "0");
     return (strlen($strConvert) == 9 ? "420" : "") . $strConvert;
 }
 function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
