@@ -61,8 +61,7 @@ foreach ($instancesIDs as $instId) {
 }
 
 // delimitery názvu skupiny v queues.idgroup
-$groupNameL = "[[";
-$groupNameR = "]]";
+$delim = [ "L" => "[[" , "R" => "]]" ];
 // ==========================================================================================================================================================
 // funkce
 
@@ -70,9 +69,9 @@ function addInstPref ($instId, $string) {               // prefixování hodnoty
     return !strlen($string) ? "" : sprintf("%04s", $instId)."-".$string;    // prefixují se jen vyplněné hodnoty (strlen > 0)
 }
 function groupNameParse ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
-    global $groupNameL, $groupNameR;
+    global $delim;
     $match = [];
-    preg_match("/".preg_quote($groupNameL)."(.*?)".preg_quote($groupNameR)."/s", $string, $match);
+    preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
 function phoneNumberCanonic ($str) {                    // veřejná tel. čísla omezená na číslice 0-9 (48-57D = 30-39H), bez úvodních nul (ltrim)
@@ -81,7 +80,7 @@ function phoneNumberCanonic ($str) {                    // veřejná tel. čísl
 }
 function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
-        //  char    decimal     hexa    use
+        //  character   dec     hexa    use
         //  "\0"         0      \\x00   Null Character
         //  "\t"         9      \\x09   Tab
         //  "\n"        10      \\x0A   New line
@@ -130,7 +129,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                     $idGroupPrefixed,           // idgroup
                                                     $groupName                  // title (= název skupiny)
                                                 ];
-                                                $$idGroup++;
+                                                $idGroup++;
                                                 $colVals[] = $idGroupPrefixed;
                                                 $out_groups -> writeRow($groupVals);   // zápis řádku do out-only tabulky 'groups'
                                                 break;
