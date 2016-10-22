@@ -78,7 +78,7 @@ function phoneNumberCanonic ($str) {                    // veřejná tel. čísl
     $strConvert = ltrim(preg_replace("/[\\x00-\\x2F\\x3A-\\xFF]/", "", $str), "0");
     return (strlen($strConvert) == 9 ? "420" : "") . $strConvert;
 }
-function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
+function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
         //  character   dec     hexa    use
         //  "\0"         0      \\x00   Null Character
@@ -90,10 +90,11 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = " | ")
         $charsToThrow   = "\\x00-\\x09\\x0B-\\x20\\xFF";// all white-spaces and control chars (hexa)
         $charsToReplace = "\\x0A";                      // new line
     }
-    $str1 = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str );     // náhrada prázdných a řídicích znaků mezerou
-    $str2 = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str1);     // náhrada odřádkování znakem "|" (vyskytují se i vícenásobná odřádkování)
-    $str3 = str_replace("\N", "", $str2);               // reliktní "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
-    return $str3;
+    $str = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str);       // náhrada prázdných a řídicích znaků mezerou
+    $str = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str);       // náhrada odřádkování znakem "|" (vyskytují se i vícenásobná odřádkování)
+    $str = str_replace ("|  ", "", $str);                                       // odebrání mezer oddělených "|" zbylých po vícenásobném odřádkování
+    $str = str_replace ("\N" , "", $str);               // zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
+    return $str;
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
