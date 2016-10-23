@@ -69,9 +69,9 @@ $keywords = [
     "date"   => ["datum"],    
     "name"   => ["jméno", "jmeno", "příjmeni", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
     "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "okres"],
-    "addrPrf"=> ["do", "k", "ke", "nad", "pod", "před", "u", "ve", "za"],
+    "addrPrf"=> ["do", "k", "ke", "nad", "pod", "před", "u", "ve", "za"],   // místopisné předložky
     "roman"  => ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
-    "noConv" => ["v"],
+    "noConv" => ["v"],                                                      // nelze rozhodnout mezi místopis. předložkou a řím. číslem → nekonvertovat case
     "mailEq" => ["mail", "email", "e-mail"],
     "psc"    => ["psč", "psc"]
 ];
@@ -106,8 +106,7 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
     $str = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str);       // náhrada prázdných a řídicích znaků mezerou
     $str = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str);       // náhrada odřádkování znakem "|" (vyskytují se i vícenásobná odřádkování)
     $str = str_replace ("|  ", "", $str);                                       // odebrání mezer oddělených "|" zbylých po vícenásobném odřádkování
-    $str = str_replace ("\N" , "", $str);               
-// zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
+    $str = str_replace ("\N" , "", $str);                   // zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
     return $str;
 }
 function substrInStr ($str, $substr) {                                          // test výskytu podřetězce v řetězci
@@ -122,7 +121,7 @@ function convertAddr ($str) {                                                   
     $addrArrOut = [];
     foreach($addrArr as $id => $slovo) {
         switch ($id) {                                                          // $id ... pořadí slova
-            case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;
+            case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;             // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
             default:    if (in_array($slovo, $keywords["noConv"])) {
                             $addrArrOut[] = $slovo;                             // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
                         } elseif (in_array($slovo, $keywords["addrPrf"])) {
@@ -142,8 +141,8 @@ function convertDate ($datestr) {                                               
     $datestr = preg_replace("/_/", "-", $datestr);                              // náhrada případných podtržítek pomlčkami
     try {
         $date = new DateTime($datestr);
-    } catch (Exception $e) {                                                    // $datestr nevyhovuje konstruktoru třídy DateTime  
-        return $datestr;
+    } catch (Exception $e) {                                                    // $datestr nevyhovuje konstruktoru třídy DateTime ...  
+        return $datestr;                                                        // ... → vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
     }  
     return $date -> format( (!strpos($datestr, "/") ? 'Y-m-d' : 'Y-d-m') )."\n";// vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
 }
@@ -154,7 +153,7 @@ function convertMail ($mail) {                                                  
 }
 function convertPSC ($str) {                                                    // vrátí buď PSČ ve tvaru xxx xx (validní), nebo "nevalidní PSČ ve formuláři"
     $str = str_replace(" ", "", $str);                                          // odebrání mezer => tvar validního PSČ je xxxxx
-    return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevlidní PSČ ve formuláři";
+    return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevalidní PSČ ve formuláři";
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
