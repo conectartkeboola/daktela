@@ -68,7 +68,10 @@ $keywords = [
     "dateEq" => ["od", "do"],
     "date"   => ["datum"],    
     "name"   => ["jméno", "jmeno", "příjmeni", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
-    "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "okres"],
+    "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "okres"],
+    "addrPrf"=> ["do", "k", "ke", "nad", "pod", "před", "u", "ve", "za"],
+    "roman"  => ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
+    "noConv" => ["v"],
     "mailEq" => ["mail", "email", "e-mail"],
     "psc"    => ["psč", "psc"]
 ];
@@ -113,6 +116,23 @@ function substrInStr ($str, $substr) {                                          
 function mb_ucwords ($str) {                                                    // ucwords pro multibyte kódování
 $str = mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
 return $str;
+}
+function convertAddr ($str) {                                                   // nastavení velikosti písmen u adresy (resp. částí dresy)
+    $addrArrIn  = explode(" ", $str);
+    $addrArrOut = [];
+    foreach($addrArr as $id => $slovo) {
+        switch ($id) {                                                          // $id ... pořadí slova
+            case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;
+            default:    if (in_array($slovo, $keywords["noConv"])) {
+                            $addrArrOut[] = $slovo;                             // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
+                        } elseif (in_array($slovo, $keywords["addrPrf"])) {
+                            $addrArrOut[] = strtolower($slovo);                 // místopisné předložky malými písmeny
+                        } elseif (in_array($slovo, $keywords["roman"])) {
+                            $addrArrOut[] = strtoupper($slovo);                 // římská čísla velkými znaky
+                        }
+        }
+    }
+    return implode(" ", $addrArrOut);
 }
 function remStrDupl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return implode($delimiter, array_unique(explode($delimiter, $str)));
@@ -209,8 +229,11 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         foreach ($keywords["date"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertDate($val);}
                                                         }
-                                                        foreach (array_merge($keywords["name"], $keywords["addr"]) as $substr) {
+                                                        foreach ($keywords["name"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val);}
+                                                        }
+                                                        foreach ($keywords["addr"] as $substr) {
+                                                            if (substrInStr($titleLow, $substr)) {$val = convertAddr($val);}
                                                         }
                                                         foreach ($keywords["psc"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
