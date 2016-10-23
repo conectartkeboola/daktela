@@ -62,6 +62,16 @@ foreach ($instancesIDs as $instId) {
 
 // delimitery názvu skupiny v queues.idgroup
 $delim = [ "L" => "[[" , "R" => "]]" ];
+
+// klíčová slova pro validaci a konverzi obsahu formulářových polí
+$keywords = [
+    "dateEq" => ["od", "do"],
+    "date"   => ["datum"],    
+    "name"   => ["jméno", "jmeno", "příjmeni", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
+    "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "okres"],
+    "mailEq" => ["mail", "email", "e-mail"],
+    "psc"    => ["psč", "psc"]
+];
 // ==========================================================================================================================================================
 // funkce
 
@@ -93,8 +103,32 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
     $str = preg_replace("/[".$charsToThrow . "]+/", $thrownWith,   $str);       // náhrada prázdných a řídicích znaků mezerou
     $str = preg_replace("/[".$charsToReplace."]+/", $replacedWith, $str);       // náhrada odřádkování znakem "|" (vyskytují se i vícenásobná odřádkování)
     $str = str_replace ("|  ", "", $str);                                       // odebrání mezer oddělených "|" zbylých po vícenásobném odřádkování
-    $str = str_replace ("\N" , "", $str);               // zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
+    $str = str_replace ("\N" , "", $str);               
+// zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
     return $str;
+}
+function mb_ucwords ($str) {                                                    // ucwords pro multibyte kódování
+$str = mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
+return $str;
+}
+function remStrDupl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
+    return implode($delimiter, array_unique(explode($delimiter, $str)));
+}
+function convertDate ($datestr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
+    if (strlen($datestr) <= 12) {$datestr = str_replace(" ", "", $datestr);}    // odebrání mezer u data do délky dd. mm. rrrr (12 znaků)
+    $datestr = preg_replace("/_/", "-", $datestr);                              // náhrada případných podtržítek pomlčkami
+    if (!is_numeric(preg_replace("/[-.\\X20\\x2F]/", "", $datestr))) {return $datestr;}    //  \\X20 = mezera, \\x20 = '/'
+    $dt = new DateTime(trim_all($datestr));
+    return $dt->format( (!strpos($datestr, "/") ? 'Y-m-d' : 'Y-d-m') ) . "\n";  // vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
+}
+function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
+    $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
+    $isValid = preg_match('/^[a-z\\.]+@[a-z]+\\.[a-z]+$/i', $mail);             // validace e-mailové adresy
+    return $isValid ? $mail : "nevalidní e-mail ve formuláři";
+}
+function convertPSC ($str) {                                                    // konverze PSČ na tvar xxx xx
+    $str = str_replace(" ", "", $str);                                          // odebrání mezer
+    return (is_numeric($str) && strlen($str) == 5) ? $str : "nevalidní PSČ ve formuláři";
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
@@ -152,8 +186,26 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,          // idrecord
                                                             $fields[$key],      // idfield
-                                                            trim_all($val)      // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-                                                        ]; 
+                                                        ];
+                                                        // -------------------------------------------------------------------------------------------------
+                                                        // validace a korekce hodnoty formulářového pole + zápis korigované hodnoty do konstruovaného řádku
+                                                        
+                                                        $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
+                                                        $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
+                                                        $valLow = mb_strtolower($val, "UTF-8"); // value malými písmeny (jen pro test výskytu klíč. slov v hodnotách)
+                                                        if (in_array($valLow, $keywords["dateEq"])) {$val = convertDate($val);}
+                                                        if (in_array($valLow, $keywords["mailEq"])) {$val = convertMail($val);}
+                                                        foreach ($keywords["date"] as $substr) {
+                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = convertDate($val);}
+                                                        }
+                                                        foreach (array_merge($keywords["name"], $keywords["addr"]) as $substr) {
+                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = mb_ucwords($val) ;}
+                                                        }
+                                                        foreach ($keywords["psc"]  as $substr) {
+                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = convertPSC($val) ;}
+                                                        }
+                                                        $fieldVals[] = $val;    // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
+                                                        // -------------------------------------------------------------------------------------------------                                                                                                              
                                                         $idFieldValue++;
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
                                                     }    
