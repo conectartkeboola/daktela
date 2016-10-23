@@ -126,9 +126,9 @@ function convertMail ($mail) {                                                  
     $isValid = preg_match('/^[a-z\\.]+@[a-z]+\\.[a-z]+$/i', $mail);             // validace e-mailové adresy
     return $isValid ? $mail : "nevalidní e-mail ve formuláři";
 }
-function convertPSC ($str) {                                                    // konverze PSČ na tvar xxx xx
-    $str = str_replace(" ", "", $str);                                          // odebrání mezer
-    return (is_numeric($str) && strlen($str) == 5) ? $str : "nevalidní PSČ ve formuláři";
+function convertPSC ($str) {                                                    // vrátí buď PSČ ve tvaru xxx xx (validní), nebo "nevalidní PSČ ve formuláři"
+    $str = str_replace(" ", "", $str);                                          // odebrání mezer => tvar validního PSČ je xxxxx
+    return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevlidní PSČ ve formuláři";
 }
 // ==========================================================================================================================================================
 // zápis záznamů do výstupních souborů
@@ -137,7 +137,7 @@ function convertPSC ($str) {                                                    
 foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých instancí Daktela
     $idGroup      = 1;                  // inkrementální index pro číslování skupin (pro každou instanci číslováno 1,2,3,...)
     $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí (pro každou instanci číslováno 1,2,3,...)
-    $fields = [];                       // pole formulářových polí (prvek pole má tvar "name => idfield")
+    $fields = [];                       // pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
     foreach ($tabsInOut as $table => $columns) {
         foreach (${"in_".$table."_".$instId} as $rowNum => $row) {              // načítání řádků vstupních tabulek
             if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -171,6 +171,9 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                 $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
                                                 break;
+                    case ["fields", "title"]:   $colVals[] = $hodnota;
+                                                $fieldRow["title"]= $hodnota;   // hodnota záznamu do pole formulářových polí
+                                                break;
                     case ["fields", "name"]:    $fieldRow["name"]   = $hodnota; // název klíče záznamu do pole formulářových polí
                                                 break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
                     case ["records","idrecord"]:$idRecord = $hodnota;           // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
@@ -184,25 +187,27 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
                                                         $fieldVals = [
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
-                                                            $idRecord,          // idrecord
-                                                            $fields[$key],      // idfield
+                                                            $idRecord,                              // idrecord
+                                                            $fields[$key]["idfield"],               // idfield
                                                         ];
                                                         // -------------------------------------------------------------------------------------------------
                                                         // validace a korekce hodnoty formulářového pole + zápis korigované hodnoty do konstruovaného řádku
                                                         
                                                         $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
                                                         $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-                                                        $valLow = mb_strtolower($val, "UTF-8"); // value malými písmeny (jen pro test výskytu klíč. slov v hodnotách)
-                                                        if (in_array($valLow, $keywords["dateEq"])) {$val = convertDate($val);}
-                                                        if (in_array($valLow, $keywords["mailEq"])) {$val = convertMail($val);}
+                                                        
+                                                        $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8"); // title malými písmeny (jen pro test výskytu klíč. slov v title)
+                                                        
+                                                        if (in_array($titleLow, $keywords["dateEq"])) {$val = convertDate($val);}
+                                                        if (in_array($titleLow, $keywords["mailEq"])) {$val = convertMail($val);}
                                                         foreach ($keywords["date"] as $substr) {
-                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = convertDate($val);}
+                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = convertDate($val);}
                                                         }
                                                         foreach (array_merge($keywords["name"], $keywords["addr"]) as $substr) {
-                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = mb_ucwords($val) ;}
+                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = mb_ucwords($val) ;}
                                                         }
-                                                        foreach ($keywords["psc"]  as $substr) {
-                                                            if (!strpos($valLow, $substr)) {continue;} else {$val = convertPSC($val) ;}
+                                                        foreach ($keywords["psc"] as $substr) {
+                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = convertPSC($val) ;}
                                                         }
                                                         $fieldVals[] = $val;    // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
@@ -217,9 +222,12 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                 $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku
                 // -----------------------------------------------------------------------------------------------------------------------------------------                
             }
-            if ( !(!strlen($fieldRow["idfield"]) || !strlen($fieldRow["name"])) ) { // je-li známý název klíče i hodnota záznamu do pole form. polí...
-                $fields[$fieldRow["name"]] = $fieldRow["idfield"];                  // ... provede se přidání záznamu ("name => idfield")
+            // přidání řádku do pole formulářových polí $fields (struktura pole je <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
+            if ( !(!strlen($fieldRow["name"]) || !strlen($fieldRow["idfield"]) || !strlen($fieldRow["title"])) ) { // je-li známý název, title i hodnota záznamu do pole form. polí...
+                $fields[$fieldRow["name"]]["idfield"] = $fieldRow["idfield"];   // ... provede se přidání prvku <name>["idfield"] => <hodnota> ...
+                $fields[$fieldRow["name"]]["title"]   = $fieldRow["title"];     // ... a prvku <name>["title"] => <hodnota>
             }    
+            
             ${"out_".$table} -> writeRow($colVals);                             // zápis sestaveného řádku do výstupní tabulky
         }
     }        
