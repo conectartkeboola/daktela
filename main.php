@@ -110,10 +110,6 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
 function substrInStr ($str, $substr) {                                          // test výskytu podřetězce v řetězci
     return strlen(strstr($str, $substr)) > 0;                                   // vrací true / false
 }
-function mb_ucwords ($str) {                                                    // ucwords pro multibyte kódování
-$str = mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
-return $str;
-}
 function remStrDupl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return implode($delimiter, array_unique(explode($delimiter, $str)));
 }
@@ -210,7 +206,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             if (substrInStr($titleLow, $substr)) {$val = convertDate($val);}
                                                         }
                                                         foreach (array_merge($keywords["name"], $keywords["addr"]) as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val);}
+                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val, "UTF-8");}
                                                         }
                                                         foreach ($keywords["psc"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
