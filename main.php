@@ -107,6 +107,9 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
 // zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
     return $str;
 }
+function substrInStr ($str, $substr) {                                          // test výskytu podřetězce v řetězci
+    return strlen(strstr($str, $substr)) > 0;                                   // vrací true / false
+}
 function mb_ucwords ($str) {                                                    // ucwords pro multibyte kódování
 $str = mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
 return $str;
@@ -201,13 +204,13 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         if (in_array($titleLow, $keywords["dateEq"])) {$val = convertDate($val);}
                                                         if (in_array($titleLow, $keywords["mailEq"])) {$val = convertMail($val);}
                                                         foreach ($keywords["date"] as $substr) {
-                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = convertDate($val);}
+                                                            if (substrInStr($titleLow, $substr)) {$val = convertDate($val);}
                                                         }
                                                         foreach (array_merge($keywords["name"], $keywords["addr"]) as $substr) {
-                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = mb_ucwords($val) ;}
+                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val);}
                                                         }
                                                         foreach ($keywords["psc"] as $substr) {
-                                                            if (!strpos($titleLow, $substr)) {continue;} else {$val = convertPSC($val) ;}
+                                                            if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
                                                         }
                                                         $fieldVals[] = $val;    // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
