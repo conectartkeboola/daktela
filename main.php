@@ -121,7 +121,7 @@ function convertDate ($datestr) {                                               
     if (strlen($datestr) <= 12) {$datestr = str_replace(" ", "", $datestr);}    // odebrání mezer u data do délky dd. mm. rrrr (12 znaků)
     $datestr = preg_replace("/_/", "-", $datestr);                              // náhrada případných podtržítek pomlčkami
     $testStr = preg_replace("/[-.\\X20\\x2F]/", "", $datestr);                  // testovací řetězec; \\X20 = mezera, \\x20 = '/'        
-    if (!is_numeric($testStr) || strlen($testStr) < 6 || strlen($testStr) > 8 || strlen($str) < 8 || strlen($str) > 10) {
+    if (!is_numeric($testStr) || strlen($testStr) < 6 || strlen($testStr) > 8 || strlen($datestr) < 8 || strlen($datestr) > 10) {
         return $datestr;                                                        // $str nevyhovuje konstruktoru třídy DateTime    
     }    
     $dt = new DateTime(trim_all($datestr));
