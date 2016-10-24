@@ -214,7 +214,12 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                     if (!count($valArr)) {continue;}        // nevyplněné formulářové pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
                                                         $fieldVals = [];                            // záznam do out-only tabulky 'fieldValues'
-                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole
+                                                        
+                                                        // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
+                                                        $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
+                                                        $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
+                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola před korekcemi
+                                                        
                                                         $fieldVals = [
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,                              // idrecord
@@ -222,10 +227,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         ];
                                                         // -------------------------------------------------------------------------------------------------
                                                         // validace a korekce hodnoty formulářového pole + zápis korigované hodnoty do konstruovaného řádku
-                                                        
-                                                        $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
-                                                        $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-                                                        
+                                                                                                        
                                                         $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8"); // title malými písmeny (jen pro test výskytu klíč. slov v title)
                                                         
                                                         if (in_array($titleLow, $keywords["dateEq"])) {$val = convertDate($val);}
@@ -242,7 +244,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         foreach ($keywords["psc"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
                                                         }
-                                                        if (!strlen($val)) {continue;}  // prázdná hodnota prvku formulářového pole - kontrola po korekci
+                                                        if (!strlen($val)) {continue;}  // prázdná hodnota prvku formulářového pole - kontrola po korekcích
                                                         $fieldVals[] = $val;            // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
                                                         $idFieldValue++;
