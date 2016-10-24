@@ -1,4 +1,6 @@
 <?php
+// TRANSFORMACE DAT Z LIBOVOLNÉHO POČTU INSTANCÍ DAKTELA
+
 require_once "vendor/autoload.php";
 
 // načtení konfiguračního souboru
@@ -8,6 +10,8 @@ $dataDir    = getenv("KBC_DATADIR").$ds;
 // pro případ importu parametrů zadaných JSON kódem v definici PHP aplikace v KBC
 $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
+// ==========================================================================================================================================================
+// konstanty
 
 // seznam instancí Daktela
 $instances = [  1   =>  "https://ilinky.daktela.com",
@@ -44,22 +48,6 @@ $tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
 $tabsInOutList  = array_keys ($tabsInOut);
 $tabsAllList    = array_keys ($tabsAll);
 
-// vytvoření výstupních souborů
-foreach ($tabsAllList as $file) {
-    ${"out_".$file} =   new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
-}
-// zápis hlaviček do výstupních souborů
-foreach ($tabsAll as $tabName => $columns) {
-    $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), $colsInOnly[$tabName]) : array_keys($columns);
-    ${"out_".$tabName} -> writeRow($colsOut);
-}
-// načtení vstupních souborů
-foreach ($instancesIDs as $instId) {
-    foreach ($tabsInOutList as $file) {
-        ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
-    }
-}
-
 // delimitery názvu skupiny v queues.idgroup
 $delim = [ "L" => "[[" , "R" => "]]" ];
 
@@ -76,6 +64,23 @@ $keywords = [
     "psc"    => ["psč", "psc"]
 ];
 // ==========================================================================================================================================================
+// vytvoření výstupních souborů
+
+foreach ($tabsAllList as $file) {
+    ${"out_".$file} =   new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
+}
+// zápis hlaviček do výstupních souborů
+foreach ($tabsAll as $tabName => $columns) {
+    $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), $colsInOnly[$tabName]) : array_keys($columns);
+    ${"out_".$tabName} -> writeRow($colsOut);
+}
+// načtení vstupních souborů
+foreach ($instancesIDs as $instId) {
+    foreach ($tabsInOutList as $file) {
+        ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
+    }
+}
+// ==========================================================================================================================================================
 // funkce
 
 function addInstPref ($instId, $string) {               // prefixování hodnoty atributu (string) 4-ciferným identifikátorem instance
@@ -83,7 +88,7 @@ function addInstPref ($instId, $string) {               // prefixování hodnoty
 }
 function groupNameParse ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $delim;
-    $match = [];
+    $match = [];                                        // "match array"
     preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $string, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
@@ -113,8 +118,7 @@ function substrInStr ($str, $substr) {                                          
     return strlen(strstr($str, $substr)) > 0;                                   // vrací true / false
 }
 function mb_ucwords ($str) {                                                    // ucwords pro multibyte kódování
-$str = mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
-return $str;
+    return mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
 }
 function convertAddr ($str) {                                                   // nastavení velikosti písmen u adresy (resp. částí dresy)
     $addrArrIn  = explode(" ", $str);
@@ -208,9 +212,9 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                 break;
                     case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
-                                                    if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
+                                                    if (!count($valArr)) {continue;}        // nevyplněné formulářové pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
-                                                        if (!strlen($val)) {continue;}              // prázdná hodnota form. pole
+                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole
                                                         $fieldVals = [
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,                              // idrecord
