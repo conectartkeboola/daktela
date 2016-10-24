@@ -67,7 +67,7 @@ $delim = [ "L" => "[[" , "R" => "]]" ];
 $keywords = [
     "dateEq" => ["od", "do"],
     "date"   => ["datum"],    
-    "name"   => ["jméno", "jmeno", "příjmeni", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
+    "name"   => ["jméno", "jmeno", "příjmení", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
     "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "okres"],
     "addrPrf"=> ["do", "k", "ke", "nad", "pod", "před", "u", "ve", "za"],   // místopisné předložky
     "roman"  => ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
