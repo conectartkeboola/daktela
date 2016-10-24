@@ -210,6 +210,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (count($valArr) == 0) {continue;}    // nevyplněné form. pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
+                                                        if (!strlen($val)) {continue;}              // prázdná hodnota form. pole
                                                         $fieldVals = [
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,                              // idrecord
