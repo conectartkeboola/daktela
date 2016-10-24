@@ -172,8 +172,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
             if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
             $colVals   = [];                                                    // řádek výstupní tabulky
             $groupVals = [];                                                    // záznam do out-only tabulky 'groups'
-            $fieldRow  = [];                                                    // záznam do pole formulářových polí            
-            $fieldVals = [];                                                    // záznam do out-only tabulky 'fieldValues'
+            $fieldRow  = [];                                                    // záznam do pole formulářových polí           
             unset($idRecord);                                                   // reset indexu záznamů do výstupní tabulky 'records'
             $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
             foreach ($columns as $colName => $prefixVal) {                      // konstrukce řádku výstupní tabulky (vložení hodnot řádku)
@@ -214,6 +213,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (!count($valArr)) {continue;}        // nevyplněné formulářové pole neobsahuje žádný prvek
                                                     foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
+                                                        $fieldVals = [];                            // záznam do out-only tabulky 'fieldValues'
                                                         if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole
                                                         $fieldVals = [
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
@@ -242,7 +242,8 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         foreach ($keywords["psc"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
                                                         }
-                                                        $fieldVals[] = $val;    // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
+                                                        if (!strlen($val)) {continue;}  // prázdná hodnota prvku formulářového pole - kontrola po korekci
+                                                        $fieldVals[] = $val;            // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
                                                         $idFieldValue++;
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
