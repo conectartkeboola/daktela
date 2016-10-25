@@ -133,6 +133,8 @@ function convertAddr ($str) {                                                   
                             $addrArrOut[] = strtolower($slovo);                 // místopisné předložky malými písmeny
                         } elseif (in_array($slovo, $keywords["roman"])) {
                             $addrArrOut[] = strtoupper($slovo);                 // římská čísla velkými znaky
+                        } else {
+                            $addrArrOut[] = mb_ucwords($slovo);                 // 2. a další slovo, pokud není uvedeno v $keywords
                         }
         }
     }
