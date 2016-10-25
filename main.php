@@ -127,11 +127,11 @@ function convertAddr ($str) {                                                   
     foreach($addrArrIn as $id => $slovo) {                                      // iterace slov ve vstupním poli
         switch ($id) {                                                          // $id ... pořadí slova
             case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;             // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
-            default:    if (in_array($slovo, $keywords["noConv"])) {
+            default:    if (in_array(strtolower($slovo), $keywords["noConv"])) {
                             $addrArrOut[] = $slovo;                             // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
-                        } elseif (in_array($slovo, $keywords["addrPrf"])) {
+                        } elseif (in_array(strtolower($slovo), $keywords["addrPrf"])) {
                             $addrArrOut[] = strtolower($slovo);                 // místopisné předložky malými písmeny
-                        } elseif (in_array($slovo, $keywords["roman"])) {
+                        } elseif (in_array(strtolower($slovo), $keywords["roman"])) {
                             $addrArrOut[] = strtoupper($slovo);                 // římská čísla velkými znaky
                         } else {
                             $addrArrOut[] = mb_ucwords($slovo);                 // 2. a další slovo, pokud není uvedeno v $keywords
