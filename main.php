@@ -245,7 +245,7 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             addInstPref($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,                              // idrecord
                                                             $fields[$key]["idfield"],               // idfield
-                                                            $fieldVals[] = $val;                    // korigovaná hodnota formulářového pole
+                                                            $val                                    // korigovaná hodnota formulářového pole
                                                         ];
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
                                                         $idFieldValue++;
