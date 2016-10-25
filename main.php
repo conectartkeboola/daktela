@@ -165,13 +165,13 @@ function convertPSC ($str) {                                                    
 // [A] tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
 foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých instancí Daktela
     $idGroup      = 1;                  // inkrementální index pro číslování skupin (pro každou instanci číslováno 1,2,3,...)
+    $groups       = [];                 // pole skupin (prvek pole má tvar idgroup => groupName)
     $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí (pro každou instanci číslováno 1,2,3,...)
-    $fields = [];                       // pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
+    $fields       = [];                 // pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
     foreach ($tabsInOut as $table => $columns) {
         foreach (${"in_".$table."_".$instId} as $rowNum => $row) {              // načítání řádků vstupních tabulek
             if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
             $colVals   = [];                                                    // řádek výstupní tabulky
-            $groupVals = [];                                                    // záznam do out-only tabulky 'groups'
             $fieldRow  = [];                                                    // záznam do pole formulářových polí           
             unset($idRecord);                                                   // reset indexu záznamů do výstupní tabulky 'records'
             $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
@@ -183,18 +183,19 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                 }
                 // -----------------------------------------------------------------------------------------------------------------------------------------
                 switch ([$table, $colName]) {
-                    case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);  // název skupiny parsovaný z queues.idgroup pomocí delimiterů
+                    case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                 if (!strlen($groupName)) {
-                                                    $colVals[] = "";  break;    // název skupiny v tabulce 'queues' nevyplněn                                               
-                                                }
-                                                $idGroupPrefixed = addInstPref($instId, $idGroup);
-                                                $groupVals = [
-                                                    $idGroupPrefixed,           // idgroup
-                                                    $groupName                  // title (= název skupiny)
-                                                ];
-                                                $idGroup++;
+                                                    $colVals[] = "";  break;                // název skupiny v tabulce 'queues' nevyplněn
+                                                }                                                
+                                                if (!in_array($groupName, $groups)) {       // skupina daného názvu dosud není uvedena v poli $groups
+                                                    $idGroupPrefixed = addInstPref($instId, $idGroup);
+                                                    $groups[$idGroupPrefixed] = $groupName; // zápis skupiny do pole $groups
+                                                    $out_groups -> writeRow([$idGroupPrefixed,$groupName]); // zápis řádku do out-only tabulky 'groups'
+                                                    $idGroup++;
+                                                } else {
+                                                    $idGroupPrefixed = array_flip($groups)[$groupName]; // získání idgroup dle názvu skupiny z pole $groups
+                                                }                                                                                                                                            
                                                 $colVals[] = $idGroupPrefixed;
-                                                $out_groups -> writeRow($groupVals);   // zápis řádku do out-only tabulky 'groups'
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                 $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
@@ -255,17 +256,20 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case [$table,"idinstance"]: $colVals[] = $instId;  break;   // hodnota = $instId
                     default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav
                 }
-                $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku
-                // -----------------------------------------------------------------------------------------------------------------------------------------                
-            }
+                $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku                
+            }   // -----------------------------------------------------------------------------------------------------------------------------------------                
+            // operace po zpracování dat v celém řádku
+            
             // přidání řádku do pole formulářových polí $fields (struktura pole je <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
             if ( !(!strlen($fieldRow["name"]) || !strlen($fieldRow["idfield"]) || !strlen($fieldRow["title"])) ) { // je-li známý název, title i hodnota záznamu do pole form. polí...
                 $fields[$fieldRow["name"]]["idfield"] = $fieldRow["idfield"];   // ... provede se přidání prvku <name>["idfield"] => <hodnota> ...
                 $fields[$fieldRow["name"]]["title"]   = $fieldRow["title"];     // ... a prvku <name>["title"] => <hodnota>
             }    
             
-            ${"out_".$table} -> writeRow($colVals);                             // zápis sestaveného řádku do výstupní tabulky
-        }
+            ${"out_".$table} -> writeRow($colVals);                             // zápis sestaveného řádku do výstupní tabulky            
+        }   // ---------------------------------------------------------------------------------------------------------------------------------------------
+        // operace po zpracování dat v celé tabulce
+        // ......        
     }        
 }
 // ==========================================================================================================================================================
