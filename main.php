@@ -123,7 +123,7 @@ function mb_ucwords ($str) {                                                    
 function convertAddr ($str) {                                                   // nastavení velikosti písmen u adresy (resp. částí dresy)
     $addrArrIn  = explode(" ", $str);
     $addrArrOut = [];
-    foreach($addrArr as $id => $slovo) {
+    foreach($addrArrIn as $id => $slovo) {
         switch ($id) {                                                          // $id ... pořadí slova
             case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;             // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
             default:    if (in_array($slovo, $keywords["noConv"])) {
@@ -164,9 +164,9 @@ function convertPSC ($str) {                                                    
 
 // [A] tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
 foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých instancí Daktela
-    $idGroup      = 1;                  // inkrementální index pro číslování skupin (pro každou instanci číslováno 1,2,3,...)
-    $groups       = [];                 // pole skupin (prvek pole má tvar idgroup => groupName)
-    $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí (pro každou instanci číslováno 1,2,3,...)
+    $idGroup      =  1;                 // inkrementální index pro číslování skupin (pro každou instanci číslováno 1,2,3,...)
+    $groups       = [];                 // pole skupin (prvek pole má tvar groupName => idgroup)
+    $idFieldValue =  1;                 // inkrementální index pro číslování hodnot formulářových polí (pro každou instanci číslováno 1,2,3,...)
     $fields       = [];                 // pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
     foreach ($tabsInOut as $table => $columns) {
         foreach (${"in_".$table."_".$instId} as $rowNum => $row) {              // načítání řádků vstupních tabulek
@@ -186,15 +186,15 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                     case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                 if (!strlen($groupName)) {
                                                     $colVals[] = "";  break;                // název skupiny v tabulce 'queues' nevyplněn
-                                                }                                                
-                                                if (!in_array($groupName, $groups)) {       // skupina daného názvu dosud není uvedena v poli $groups
+                                                }
+                                                if (!array_key_exists($groupName,$groups)) {// skupina daného názvu dosud není uvedena v poli $groups
                                                     $idGroupPrefixed = addInstPref($instId, $idGroup);
-                                                    $groups[$idGroupPrefixed] = $groupName; // zápis skupiny do pole $groups
+                                                    $groups[$groupName] = $idGroupPrefixed; // zápis skupiny do pole $groups
                                                     $out_groups -> writeRow([$idGroupPrefixed,$groupName]); // zápis řádku do out-only tabulky 'groups'
-                                                    $idGroup++;
+                                                    $idGroup++;                                             // (řádek má tvar idgroup | groupName)
                                                 } else {
-                                                    $idGroupPrefixed = array_flip($groups)[$groupName]; // získání idgroup dle názvu skupiny z pole $groups
-                                                }                                                                                                                                            
+                                                    $idGroupPrefixed = $groups[$groupName]; // získání idgroup dle názvu skupiny z pole $groups
+                                                }                                                
                                                 $colVals[] = $idGroupPrefixed;
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
