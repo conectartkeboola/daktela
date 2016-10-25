@@ -220,15 +220,9 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                         // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
                                                         $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
                                                         $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
-                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola před korekcemi
-                                                        
-                                                        $fieldVals = [
-                                                            addInstPref($instId, $idFieldValue),    // idfieldvalue
-                                                            $idRecord,                              // idrecord
-                                                            $fields[$key]["idfield"],               // idfield
-                                                        ];
+                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
                                                         // -------------------------------------------------------------------------------------------------
-                                                        // validace a korekce hodnoty formulářového pole + zápis korigované hodnoty do konstruovaného řádku
+                                                        // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
                                                                                                         
                                                         $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8"); // title malými písmeny (jen pro test výskytu klíč. slov v title)
                                                         
@@ -247,7 +241,12 @@ foreach ($instancesIDs as $instId) {    // procházení tabulek jednotlivých in
                                                             if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
                                                         }
                                                         if (!strlen($val)) {continue;}  // prázdná hodnota prvku formulářového pole - kontrola po korekcích
-                                                        $fieldVals[] = $val;            // zápis korigované hodnoty form. pole do řádku pro tabulku out_fieldValues  
+                                                        $fieldVals = [
+                                                            addInstPref($instId, $idFieldValue),    // idfieldvalue
+                                                            $idRecord,                              // idrecord
+                                                            $fields[$key]["idfield"],               // idfield
+                                                            $fieldVals[] = $val;                    // korigovaná hodnota formulářového pole
+                                                        ];
                                                         // -------------------------------------------------------------------------------------------------                                                                                                              
                                                         $idFieldValue++;
                                                         $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
