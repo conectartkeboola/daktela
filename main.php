@@ -57,7 +57,8 @@ $keywords = [
     "date"   => ["datum"],    
     "name"   => ["jméno", "jmeno", "příjmení", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
     "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "okres"],
-    "addrPrf"=> ["do", "k", "ke", "nad", "pod", "před", "u", "ve", "za", "č.o.", "č.p."],   // místopisné předložky
+    "addrPrf"=> ["do","k","ke","mezi","nad","pod","před","u","ve","za","třída","tř.","alej","sady","park","provincie","svaz","území",
+                 "republika","království","ostrovy","emiráty","okr.","okres","kraj","č.o.","č.p."], // místopisné předložky a označení
     "roman"  => ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
     "noConv" => ["v"],                                                      // nelze rozhodnout mezi místopis. předložkou a řím. číslem → nekonvertovat case
     "mailEq" => ["mail", "email", "e-mail"],
@@ -124,17 +125,18 @@ function convertAddr ($str) {                                                   
     global $keywords;
     $addrArrIn  = explode(" ", $str);                                           // vstupní pole slov
     $addrArrOut = [];                                                           // výstupní pole slov
-    foreach($addrArrIn as $id => $slovo) {                                      // iterace slov ve vstupním poli
+    foreach($addrArrIn as $id => $word) {                                       // iterace slov ve vstupním poli
         switch ($id) {                                                          // $id ... pořadí slova
-            case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;             // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
-            default:    if (in_array(strtolower($slovo), $keywords["noConv"])) {
-                            $addrArrOut[] = $slovo;                             // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
-                        } elseif (in_array(strtolower($slovo), $keywords["addrPrf"])) {
-                            $addrArrOut[] = strtolower($slovo);                 // místopisné předložky malými písmeny
-                        } elseif (in_array(strtolower($slovo), $keywords["roman"])) {
-                            $addrArrOut[] = strtoupper($slovo);                 // římská čísla velkými znaky
+            case 0:     $addrArrOut[] =  mb_ucwords($word); break;              // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
+            default:    $wordLow = mb_strtolower($word, "UTF-8");               // slovo malými písmeny (pouze pro test výskytu slova v poli $keywords)
+                        if (in_array($wordLow, $keywords["noConv"])) {
+                            $addrArrOut[] = $word;                              // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
+                        } elseif (in_array($wordLow, $keywords["addrPrf"])) {
+                            $addrArrOut[] = $wordLow;                           // místopisné předložky a místopisná označení malými písmeny
+                        } elseif (in_array($wordLow, $keywords["roman"])) {
+                            $addrArrOut[] = strtoupper($word);                  // římská čísla velkými znaky
                         } else {
-                            $addrArrOut[] = mb_ucwords($slovo);                 // 2. a další slovo, pokud není uvedeno v $keywords
+                            $addrArrOut[] = mb_ucwords($word);                  // 2. a další slovo, pokud není uvedeno v $keywords
                         }
         }
     }
