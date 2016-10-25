@@ -121,9 +121,10 @@ function mb_ucwords ($str) {                                                    
     return mb_convert_case($str, MB_CASE_TITLE, "UTF-8");
 }
 function convertAddr ($str) {                                                   // nastavení velikosti písmen u adresy (resp. částí dresy)
-    $addrArrIn  = explode(" ", $str);
-    $addrArrOut = [];
-    foreach($addrArrIn as $id => $slovo) {
+    global $keywords;
+    $addrArrIn  = explode(" ", $str);                                           // vstupní pole slov
+    $addrArrOut = [];                                                           // výstupní pole slov
+    foreach($addrArrIn as $id => $slovo) {                                      // iterace slov ve vstupním poli
         switch ($id) {                                                          // $id ... pořadí slova
             case 0:     $addrArrOut[] =  mb_ucwords($slovo); break;             // u 1. slova jen nastavit velké 1. písmeno a ostatní písmena malá
             default:    if (in_array($slovo, $keywords["noConv"])) {
