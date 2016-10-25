@@ -54,15 +54,16 @@ $delim = [ "L" => "[[" , "R" => "]]" ];
 // klíčová slova pro validaci a konverzi obsahu formulářových polí
 $keywords = [
     "dateEq" => ["od", "do"],
+    "mailEq" => ["mail", "email", "e-mail"],
     "date"   => ["datum"],    
     "name"   => ["jméno", "jmeno", "příjmení", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
     "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "okres"],
-    "addrPrf"=> ["do","k","ke","mezi","nad","pod","před","u","ve","za","třída","tř.","alej","sady","park","provincie","svaz","území",
-                 "republika","království","ostrovy","emiráty","okr.","okres","kraj","č.o.","č.p."], // místopisné předložky a označení
-    "roman"  => ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
-    "noConv" => ["v"],                                                      // nelze rozhodnout mezi místopis. předložkou a řím. číslem → nekonvertovat case
-    "mailEq" => ["mail", "email", "e-mail"],
-    "psc"    => ["psč", "psc"]
+    "psc"    => ["psč", "psc"],
+    "addrVal"=> ["do","k","ke","mezi","nad","pod","před","u","ve","za","čtvrť","sídliště","sídl.",
+                 "ulice","ul.","třída","tř.","nábřeží","nábř.","alej","sady","park","provincie","svaz","území",
+                 "město","republika","království","ostrovy","emiráty","okr.","okres","kraj","č.o.","č.p."], // místopisné předložky a označení
+    "romnVal"=> ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
+    "noConv" => ["v"]   // nelze rozhodnout mezi místopis. předložkou a řím. číslem → nekonvertovat case    
 ];
 // ==========================================================================================================================================================
 // vytvoření výstupních souborů
@@ -131,9 +132,9 @@ function convertAddr ($str) {                                                   
             default:    $wordLow = mb_strtolower($word, "UTF-8");               // slovo malými písmeny (pouze pro test výskytu slova v poli $keywords)
                         if (in_array($wordLow, $keywords["noConv"])) {
                             $addrArrOut[] = $word;                              // nelze rozhodnout mezi místopis. předložkou a řím. číslem → bez case konverze
-                        } elseif (in_array($wordLow, $keywords["addrPrf"])) {
+                        } elseif (in_array($wordLow, $keywords["addrVal"])) {
                             $addrArrOut[] = $wordLow;                           // místopisné předložky a místopisná označení malými písmeny
-                        } elseif (in_array($wordLow, $keywords["roman"])) {
+                        } elseif (in_array($wordLow, $keywords["romnVal"])) {
                             $addrArrOut[] = strtoupper($word);                  // římská čísla velkými znaky
                         } else {
                             $addrArrOut[] = mb_ucwords($word);                  // 2. a další slovo, pokud není uvedeno v $keywords
