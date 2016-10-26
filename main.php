@@ -29,9 +29,10 @@ $tabsInOut = [
     "pauses"            =>  ["idpause" => 1, "title" => 0, "idinstance" => 0, "type" => 0, "paid" => 0],
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
-    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "call_id"=> 1, "created"=> 0, "created_by"=> 1],
+    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 0, "call_id"=> 1, "created"=> 0, "created_by"=> 1],
     "fields"            =>  ["idfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0],    
-    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>1,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0,"form"=>0]
+    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>0,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0,"form"=>0]
+    // 'idstatus' v tabulkách 'recordSnapshots' a 'records' se prefixují ID instance jen při nepoužití commonStatuses (ošetřeno zvlášť)
 ];
 $tabsOutOnly = [
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
@@ -271,7 +272,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                     if (!$iterRes) {                                        // stav s daným title dosud není v poli $statuses
                                                         $statuses[$idStatus]["title"]        = $hodnota;    // zápis hodnot stavu do pole $statuses
                                                         $statuses[$idStatus]["statusIdOrig"] = $statIdOrig;
-                                                        $colVal[] = $statIdOrig;                                              
+                                                        $colVal[] = setIdLength(0, $idStatus, false);                                              
                                                         $idStatus++;
                                                     } else {
                                                         $statuses[$iterRes]["statusIdOrig"][]= $statIdOrig;
@@ -282,7 +283,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                 $colVals[] = $hodnota;                                      // title stavu                                             
                                                 break;
                     case ["recordSnapshots", "idstatus"]:
-                                                $colVals[] = $commonStatuses ? iterStatuses($hodnota) : $hodnota;
+                                                $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : setIdLength($idInst, $hodnota);
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                 $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
@@ -295,7 +296,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                     case ["records","idrecord"]:$idRecord  = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
-                    case ["records","idstatus"]:$colVals[] = $commonStatuses ? iterStatuses($hodnota) : $hodnota;
+                    case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : setIdLength($idInst, $hodnota);
                                                 break;
                     case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                 break;
