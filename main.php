@@ -279,7 +279,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                     if (!$iterRes) {                                        // stav s daným title dosud není v poli $statuses
                                                         $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
                                                         $statuses[$idStatus]["statusIdOrig"][] = $statIdOrig;
-                                                        $colVal[] = setIdLength(0, $idStatus, false);                                              
+                                                        $colVals[] = setIdLength(0, $idStatus, false);                                              
                                                         $idStatus++;
                                                     } else {
                                                         $statuses[$iterRes]["statusIdOrig"][]  = $statIdOrig;
