@@ -192,12 +192,12 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
     global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
     foreach ($statuses as $statId => $statRow) {
         switch ($valType) {
-            case "title":           // $staRow[$valType] je string
+            case "title":           // $statRow[$valType] je string
                                     if ($statRow[$valType] == $val) {   // zadaná hodnota v poli $statuses nalezena
                                         return $statId;                 // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
                                     }
                                     break;
-            case "statusIdOrig":    // $staRow[$valType] je 1D-pole
+            case "statusIdOrig":    // $statRow[$valType] je 1D-pole
                                     foreach ($statRow[$valType] as $statVal) {
                                         if ($statVal == $val) {     // zadaná hodnota v poli $statuses nalezena
                                             return $statId;         // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
@@ -277,12 +277,12 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                     case ["statuses", "title"]: if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
                                                     $iterRes = iterStatuses($hodnota, "title");             // výsledek hledání title v poli $statuses (umělé ID stavu nebo false)
                                                     if (!$iterRes) {                                        // stav s daným title dosud není v poli $statuses
-                                                        $statuses[$idStatus]["title"]        = $hodnota;    // zápis hodnot stavu do pole $statuses
-                                                        $statuses[$idStatus]["statusIdOrig"] = $statIdOrig;
+                                                        $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
+                                                        $statuses[$idStatus]["statusIdOrig"][] = $statIdOrig;
                                                         $colVal[] = setIdLength(0, $idStatus, false);                                              
                                                         $idStatus++;
                                                     } else {
-                                                        $statuses[$iterRes]["statusIdOrig"][]= $statIdOrig;
+                                                        $statuses[$iterRes]["statusIdOrig"][]  = $statIdOrig;
                                                         break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
                                                     }
                                                     unset($statIdOrig);
