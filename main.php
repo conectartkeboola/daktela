@@ -190,12 +190,20 @@ function initStatuses () {              // nastavení výchozích hodnot proměn
     unset($idstatusFormated);           // $idStatus doplněný na požadovaný počet číslic
 }
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
-    global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig
+    global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
     foreach ($statuses as $statId => $statRow) {
-        foreach ($statRow[$valType] as $statVal) {
-            if ($statVal == $val) {     // zadaná hodnota v poli $statuses nalezena
-                return $statId;         // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
-            }
+        switch ($valType) {
+            case "title":           // $staRow[$valType] je string
+                                    if ($statRow[$valType] == $val) {   // zadaná hodnota v poli $statuses nalezena
+                                        return $statId;                 // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
+                                    }
+                                    break;
+            case "statusIdOrig":    // $staRow[$valType] je 1D-pole
+                                    foreach ($statRow[$valType] as $statVal) {
+                                        if ($statVal == $val) {     // zadaná hodnota v poli $statuses nalezena
+                                            return $statId;         // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
+                                        }
+                                    }
         }        
     }
     return false;                       // zadaná hodnota v poli $statuses nenalezena
