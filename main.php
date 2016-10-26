@@ -22,7 +22,6 @@ $instancesIDs = array_keys($instances);
 // struktura tabulek
 $tabsInOut = [
  // "název_tabulky"     =>  ["názec_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci číslem instance]    
-    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "call_id"=> 1, "created"=> 0, "created_by"=> 1],
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
     "pauseSessions"     =>  ["idpausesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idpause" => 1, "iduser" => 1],
     "queueSessions"     =>  ["idqueuesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idqueue" => 1, "iduser" => 1],
@@ -30,15 +29,19 @@ $tabsInOut = [
     "pauses"            =>  ["idpause" => 1, "title" => 0, "idinstance" => 0, "type" => 0, "paid" => 0],
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
+    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "call_id"=> 1, "created"=> 0, "created_by"=> 1],
     "fields"            =>  ["idfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0],    
-    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>1,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0,"form"=>0]    
+    "records"           =>  ["idrecord"=>1,"iduser"=>1,"idqueue"=>1,"idstatus"=>1,"number"=>0,"call_id"=>1,"edited"=>0,"created"=>0,"idinstance"=>0,"form"=>0]
 ];
 $tabsOutOnly = [
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
     "groups"            =>  ["idgroup" => 1, "title" => 0],
-    "instances"         =>  ["idinstance" => 0, "url" => 0]
-    // 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
+    "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
+// nutno dodržet pořadí tabulek:
+// - 'records' a 'recordSnapshots' se odkazijí na 'statuses'.'idstatus' → musí být uvedeny až za 'statuses' (pro případ použití commonStatuses)
+// - 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
+
 $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupních tabulek (slouží jen k internímu zpracování)
  // "název_tabulky"     =>  ["název_sloupce_1", "název_sloupce_2, ...]
     "fields"            =>  ["name"],
@@ -169,7 +172,7 @@ function convertPSC ($str) {                                                    
 }
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup;
-    $groups       = [];                 // pole skupin (prvek pole má tvar groupName => idgroup)
+    $groups       = [];                 // 1D-pole skupin (prvek pole má tvar groupName => idgroup)
     $idGroup      = 1;                  // inkrementální index pro číslování skupin
 }
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
@@ -179,9 +182,22 @@ function initFields () {                // nastavení výchozích hodnot proměn
 }
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated;
-    $statuses     = [];                 // pole stavů (prvek pole má tvar idstatus => title)
+    $statuses     = [];                 /* 3D-pole stavů (prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
+                                           kde statusId a title jsou unikátní
+                                           a v poli statusIdOrig jsou originální ID stejnojmenných stavů (prefixovaná) z různých instancí)  */
     $idStatus     = 1;                  // inkrementální index pro číslování stavů (1, 2, ...)
     unset($idstatusFormated);           // $idStatus doplněný na požadovaný počet číslic
+}
+function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
+    global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig
+    foreach ($statuses as $statId => $statRow) {
+        foreach ($statRow[$valType] as $statVal) {
+            if ($statVal == $val) {     // zadaná hodnota v poli $statuses nalezena
+                return $statId;         // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
+            }
+        }        
+    }
+    return false;                       // zadaná hodnota v poli $statuses nenalezena
 }
 // ==========================================================================================================================================================
 // vytvoření výstupních souborů
@@ -244,18 +260,29 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                 }                                                
                                                 $colVals[] = $idGroup;
                                                 break;
-                    case["statuses","idstatus"]:if (!$commonStatuses) {$colVals[] = $hodnota;}              // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť
+                    case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
+                                                    $statIdOrig = $hodnota;                                 // uložení originálního (prefixovaného) ID stavu do proměnné $statIdOrig
+                                                } else {                                                    // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť
+                                                    $colVals[]  = $hodnota;                               
+                                                }              
                                                 break;
                     case ["statuses", "title"]: if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
-                                                    if (in_array($hodnota, $statuses)) {                    // stav s tímto title už je uveden v poli $statuses                                                  
-                                                        break;
-                                                    } else {                                                
-                                                        $statuses[$idStatus] = $hodnota;                    // zápis stavu do pole $statuses
-                                                        $colVals[] = setIdLength(0, $idStatus, false);      // $idStatus doplněný na požadovaný počet číslic
+                                                    $iterRes = iterStatuses($hodnota, "title");             // výsledek hledání title v poli $statuses (umělé ID stavu nebo false)
+                                                    if (!$iterRes) {                                        // stav s daným title dosud není v poli $statuses
+                                                        $statuses[$idStatus]["title"]        = $hodnota;    // zápis hodnot stavu do pole $statuses
+                                                        $statuses[$idStatus]["statusIdOrig"] = $statIdOrig;
+                                                        $colVal[] = $statIdOrig;                                              
                                                         $idStatus++;
+                                                    } else {
+                                                        $statuses[$iterRes]["statusIdOrig"][]= $statIdOrig;
+                                                        break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
                                                     }
+                                                    unset($statIdOrig);
                                                 }                                             
                                                 $colVals[] = $hodnota;                                      // title stavu                                             
+                                                break;
+                    case ["recordSnapshots", "idstatus"]:
+                                                $colVals[] = $commonStatuses ? iterStatuses($hodnota) : $hodnota;
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                 $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
@@ -263,10 +290,12 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                     case ["fields", "title"]:   $colVals[] = $hodnota;
                                                 $fieldRow["title"]= $hodnota;   // hodnota záznamu do pole formulářových polí
                                                 break;
-                    case ["fields", "name"]:    $fieldRow["name"]   = $hodnota; // název klíče záznamu do pole formulářových polí
+                    case ["fields", "name"]:    $fieldRow["name"] = $hodnota;   // název klíče záznamu do pole formulářových polí
                                                 break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
-                    case ["records","idrecord"]:$idRecord = $hodnota;           // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                    case ["records","idrecord"]:$idRecord  = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
+                                                break;
+                    case ["records","idstatus"]:$colVals[] = $commonStatuses ? iterStatuses($hodnota) : $hodnota;
                                                 break;
                     case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                 break;
