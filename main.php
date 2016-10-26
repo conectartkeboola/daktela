@@ -259,14 +259,14 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                     $colVals[] = "";  break;                // název skupiny v tabulce 'queues' nevyplněn
                                                 }  
                                                 if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups                                                    
-                                                    $idGroup = setIdLength($instId,$idGroup,!$commonGroups);// !$commonGroups ... prefixovat $idGroup identifikátorem instance
-                                                    $groups[$groupName] = $idGroup;                         // zápis skupiny do pole $groups
-                                                    $out_groups -> writeRow([$idGroup,$groupName]);         // zápis řádku do out-only tabulky 'groups'     
+                                                    $idGroupFormated = setIdLength($instId,$idGroup,!$commonGroups);// !$commonGroups ... neprefixovat $idGroup identifikátorem instance
+                                                    $groups[$groupName] = $idGroupFormated;                 // zápis skupiny do pole $groups
+                                                    $out_groups -> writeRow([$idGroupFormated,$groupName]); // zápis řádku do out-only tabulky 'groups'     
                                                     $idGroup++;                                             // (řádek má tvar idgroup | groupName)
                                                 } else {
-                                                    $idGroup = $groups[$groupName];                         // získání idgroup dle názvu skupiny z pole $groups
+                                                    $idGroupFormated = $groups[$groupName];                 // získání idgroup dle názvu skupiny z pole $groups
                                                 }                                                
-                                                $colVals[] = $idGroup;
+                                                $colVals[] = $idGroupFormated;
                                                 break;
                     case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
                                                     $statIdOrig = $hodnota;                                 // uložení originálního (prefixovaného) ID stavu do proměnné $statIdOrig
