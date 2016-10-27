@@ -52,12 +52,12 @@ $tabsInOutList  = array_keys ($tabsInOut);
 $tabsAllList    = array_keys ($tabsAll);
 
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
-$instCommonOuts = ["groups", "statuses"];  
+$instCommonOuts = [/*"groups", "statuses"*/];  
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
     "separator" => "-",     // znak oddělující ID instance od inkrementálního ID dané tabulky
-    "instId"    =>   4,     // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem)
+    "instId"    =>   2,     // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem)
     "id"        =>  10      // počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem)    
 ];
 
@@ -151,15 +151,15 @@ function convertAddr ($str) {                                                   
 function remStrDupl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return implode($delimiter, array_unique(explode($delimiter, $str)));
 }
-function convertDate ($datestr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
-    if (strlen($datestr) <= 12) {$datestr = str_replace(" ", "", $datestr);}    // odebrání mezer u data do délky dd. mm. rrrr (12 znaků)
-    $datestr = preg_replace("/_/", "-", $datestr);                              // náhrada případných podtržítek pomlčkami
+function convertDate ($dateStr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
+    if (strlen($dateStr) <= 12) {$dateStr = str_replace(" ", "", $dateStr);}    // odebrání mezer u data do délky dd. mm. rrrr (12 znaků)
+    $dateStr = preg_replace("/_/", "-", $dateStr);                              // náhrada případných podtržítek pomlčkami
     try {
-        $date = new DateTime($datestr);                                         // pokus o vytvoření objektu $date jako instance třídy DateTime z $datestr
-    } catch (Exception $e) {                                                    // $datestr nevyhovuje konstruktoru třídy DateTime ...  
-        return $datestr;                                                        // ... → vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
+        $date = new DateTime($dateStr);                                         // pokus o vytvoření objektu $date jako instance třídy DateTime z $dateStr
+    } catch (Exception $e) {                                                    // $dateStr nevyhovuje konstruktoru třídy DateTime ...  
+        return $dateStr;                                                        // ... → vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
     }  
-    return $date -> format( (!strpos($datestr, "/") ? 'Y-m-d' : 'Y-d-m') )."\n";// vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
+    return $date -> format( (!strpos($dateStr, "/") ? 'Y-m-d' : 'Y-d-m') )."\n";// vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
 }
 function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
     $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
@@ -177,7 +177,7 @@ function initGroups () {                // nastavení výchozích hodnot proměn
 }
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
     global $fields, $idFieldValue;
-    $fields       = [];                 // pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
+    $fields       = [];                 // 2D-pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
     $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí 
 }
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
@@ -254,53 +254,53 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                 }
                 // -----------------------------------------------------------------------------------------------------------------------------------------
                 switch ([$table, $colName]) {
-                    case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
-                                                if (!strlen($groupName)) {
-                                                    $colVals[] = "";  break;                // název skupiny v tabulce 'queues' nevyplněn
+                    case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
+                                                if (!strlen($groupName)) {                                  // název skupiny ve vstupní tabulce 'queues' nevyplněn ...
+                                                    $colVals[] = "";  break;                                // ... → stav se do výstupní tabulky 'queues' nezapíše
                                                 }  
                                                 if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups                                                    
-                                                    $idGroupFormated = setIdLength($instId,$idGroup,!$commonGroups);// !$commonGroups ... neprefixovat $idGroup identifikátorem instance
+                                                    $idGroupFormated = setIdLength($instId,$idGroup,!$commonGroups);// $commonGroups → neprefixovat $idGroup identifikátorem instance
                                                     $groups[$groupName] = $idGroupFormated;                 // zápis skupiny do pole $groups
-                                                    $out_groups -> writeRow([$idGroupFormated,$groupName]); // zápis řádku do out-only tabulky 'groups'     
-                                                    $idGroup++;                                             // (řádek má tvar idgroup | groupName)
+                                                    $out_groups -> writeRow([$idGroupFormated,$groupName]); // zápis řádku do out-only tabulky 'groups' (řádek má tvar idgroup | groupName)     
+                                                    $idGroup++;                                             // inkrement umělého ID skupiny
                                                 } else {
                                                     $idGroupFormated = $groups[$groupName];                 // získání idgroup dle názvu skupiny z pole $groups
                                                 }                                                
-                                                $colVals[] = $idGroupFormated;
+                                                $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
                                                 break;
                     case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
                                                     $statIdOrig = $hodnota;                                 // uložení originálního (prefixovaného) ID stavu do proměnné $statIdOrig
                                                 } else {                                                    // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť
-                                                    $colVals[]  = $hodnota;                               
+                                                    $colVals[]  = $hodnota;                                 // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku
                                                 }              
                                                 break;
                     case ["statuses", "title"]: if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
                                                     $iterRes = iterStatuses($hodnota, "title");             // výsledek hledání title v poli $statuses (umělé ID stavu nebo false)
-                                                    if (!$iterRes) {                                        // stav s daným title dosud není v poli $statuses
+                                                    if (!$iterRes) {                                        // stav s daným title dosud v poli $statuses neexistuje
                                                         $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
                                                         $statuses[$idStatus]["statusIdOrig"][] = $statIdOrig;
-                                                        $colVals[] = setIdLength(0, $idStatus, false);                                              
-                                                        $idStatus++;
-                                                    } else {
-                                                        $statuses[$iterRes]["statusIdOrig"][]  = $statIdOrig;
+                                                        $colVals[] = setIdLength(0, $idStatus, false);      // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku                                        
+                                                        $idStatus++;                                        // inkrement umělého ID stavů
+                                                    } else {                                                // stav s daným title už v poli $statuses existuje
+                                                        $statuses[$iterRes]["statusIdOrig"][] = $statIdOrig;// připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
                                                         break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
                                                     }
-                                                    unset($statIdOrig);
+                                                    unset($statIdOrig);                                     // unset proměnné s uloženou hodnotou originálního (prefixovaného) ID stavu (úklid)
                                                 }                                             
-                                                $colVals[] = $hodnota;                                      // title stavu                                             
+                                                $colVals[] = $hodnota;                                      // vložení title stavu jako druhého prvku do konstruovaného řádku                                           
                                                 break;
                     case ["recordSnapshots", "idstatus"]:
                                                 $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                 break;
                     case ["fields", "idfield"]: $colVals[] = $hodnota;
-                                                $fieldRow["idfield"]= $hodnota; // hodnota záznamu do pole formulářových polí
+                                                $fieldRow["idfield"]= $hodnota;             // hodnota záznamu do pole formulářových polí
                                                 break;
                     case ["fields", "title"]:   $colVals[] = $hodnota;
-                                                $fieldRow["title"]= $hodnota;   // hodnota záznamu do pole formulářových polí
+                                                $fieldRow["title"]= $hodnota;               // hodnota záznamu do pole formulářových polí
                                                 break;
-                    case ["fields", "name"]:    $fieldRow["name"] = $hodnota;   // název klíče záznamu do pole formulářových polí
-                                                break;                          // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
-                    case ["records","idrecord"]:$idRecord  = $hodnota;          // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                    case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
+                                                break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
+                    case ["records","idrecord"]:$idRecord  = $hodnota;                      // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                 $colVals[] = $hodnota;
                                                 break;
                     case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
@@ -310,13 +310,13 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                     case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
                                                                                             // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
                                                     if (empty($valArr)) {continue;}         // nevyplněné formulářové pole - neobsahuje žádný prvek
-                                                    foreach ($valArr as $val) { // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
-                                                        $fieldVals = [];                            // záznam do out-only tabulky 'fieldValues'
+                                                    foreach ($valArr as $val) {             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
+                                                        $fieldVals = [];                    // záznam do out-only tabulky 'fieldValues'
                                                         
                                                         // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
-                                                        $val = remStrDupl($val);// value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
-                                                        $val = trim_all($val);  // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
-                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
+                                                        $val = remStrDupl($val);            // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
+                                                        $val = trim_all($val);              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
+                                                        if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
                                                         // -------------------------------------------------------------------------------------------------
                                                         // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
                                                                                                         
@@ -328,15 +328,15 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                             if (substrInStr($titleLow, $substr)) {$val = convertDate($val);}
                                                         }
                                                         foreach ($keywords["name"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val);}
+                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val); }
                                                         }
                                                         foreach ($keywords["addr"] as $substr) {
                                                             if (substrInStr($titleLow, $substr)) {$val = convertAddr($val);}
                                                         }
                                                         foreach ($keywords["psc"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = convertPSC($val);}
+                                                            if (substrInStr($titleLow, $substr)) {$val = convertPSC($val); }
                                                         }
-                                                        if (!strlen($val)) {continue;}  // prázdná hodnota prvku formulářového pole - kontrola po korekcích
+                                                        if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola po korekcích
                                                         $fieldVals = [
                                                             setIdLength($instId, $idFieldValue),    // idfieldvalue
                                                             $idRecord,                              // idrecord
@@ -350,7 +350,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                 }                                                
                                                 break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"    
                     case [$table,"idinstance"]: $colVals[] = $instId;  break;   // hodnota = $instId
-                    default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav
+                    default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
                 }
                 $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku                
             }   // -----------------------------------------------------------------------------------------------------------------------------------------                
@@ -367,7 +367,7 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
             }
         }   // ---------------------------------------------------------------------------------------------------------------------------------------------
         // operace po zpracování dat v celé tabulce
-        // ......        
+        // < ... nothing to do ... >    
     }        
 }
 // ==========================================================================================================================================================
