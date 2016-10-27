@@ -86,10 +86,10 @@ function setIdLength ($instId =0,$str,$useInstPref =true) { // prefixování hod
     global $idFormat;
     switch (!strlen($str)) {
         case true:  return "";                              // vstupní hodnota je řetězec nulové délky
-        case false: $ifFormated = sprintf('%0'.$idFormat["id"].'s', $str);
+        case false: $idFormated = sprintf('%0'.$idFormat["id"].'s', $str);
                     switch ($useInstPref) {                 // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
-                        case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["separator"] . $ifFormated;
-                        case false: return $ifFormated;    
+                        case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["separator"] . $idFormated;
+                        case false: return $idFormated;    
                     }   
     }
 }                                                       // prefixují se jen vyplněné hodnoty (strlen > 0)
