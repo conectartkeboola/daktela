@@ -148,7 +148,7 @@ function convertAddr ($str) {                                                   
     }
     return implode(" ", $addrArrOut);
 }
-function remStrMultipl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
+function remStrMultipl ($str, $delimiter = " ") {                               // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return implode($delimiter, array_unique(explode($delimiter, $str)));
 }
 function convertDate ($dateStr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
@@ -164,7 +164,7 @@ function convertDate ($dateStr) {                                               
 function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
     $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
     $isValid = preg_match('/^[a-z\\.]+@[a-z]+\\.[a-z]+$/i', $mail);             // validace e-mailové adresy
-    return $isValid ? $mail : "nevalidní e-mail ve formuláři";                  // vrátí buď e-mailovou adresu (lowercase), nebo "nevalidní e-mail ve formuláři" 
+    return $isValid ? $mail : "(nevalidní e-mail) ".$mail;                      // vrátí buď e-mail (lowercase), nebo e-mail s prefixem "(nevalidní e-mail) "
 }
 function convertPSC ($str) {                                                    // vrátí buď PSČ ve tvaru xxx xx (validní), nebo "nevalidní PSČ ve formuláři"
     $str = str_replace(" ", "", $str);                                          // odebrání mezer => pracovní tvar validního PSČ je xxxxx
