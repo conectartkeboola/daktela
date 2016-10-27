@@ -52,7 +52,7 @@ $tabsInOutList  = array_keys ($tabsInOut);
 $tabsAllList    = array_keys ($tabsAll);
 
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
-$instCommonOuts = [/*"groups", "statuses"*/];  
+$instCommonOuts = ["groups", "statuses"];  
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
@@ -164,29 +164,30 @@ function convertDate ($dateStr) {                                               
 function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
     $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
     $isValid = preg_match('/^[a-z\\.]+@[a-z]+\\.[a-z]+$/i', $mail);             // validace e-mailové adresy
-    return $isValid ? $mail : "nevalidní e-mail ve formuláři";
+    return $isValid ? $mail : "nevalidní e-mail ve formuláři";                  // vrátí buď e-mailovou adresu (lowercase), nebo "nevalidní e-mail ve formuláři" 
 }
 function convertPSC ($str) {                                                    // vrátí buď PSČ ve tvaru xxx xx (validní), nebo "nevalidní PSČ ve formuláři"
-    $str = str_replace(" ", "", $str);                                          // odebrání mezer => tvar validního PSČ je xxxxx
-    return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevalidní PSČ ve formuláři";
+    $str = str_replace(" ", "", $str);                                          // odebrání mezer => pracovní tvar validního PSČ je xxxxx
+    return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevalidní PSČ ve formuláři";  // finální tvar PSČ je xxx xx
 }
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup;
-    $groups       = [];                 // 1D-pole skupin (prvek pole má tvar groupName => idgroup)
-    $idGroup      = 1;                  // inkrementální index pro číslování skupin
+    $groups       = [];                 // 1D-pole skupin - prvek pole má tvar groupName => idgroup
+    $idGroup      = 1;                  // umělý inkrementální index pro číslování skupin
 }
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
     global $fields, $idFieldValue;
-    $fields       = [];                 // 2D-pole formulářových polí (prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>] )
-    $idFieldValue = 1;                  // inkrementální index pro číslování hodnot formulářových polí 
+    $fields       = [];                 // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]
+    $idFieldValue = 1;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated;
-    $statuses     = [];                 /* 3D-pole stavů (prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
-                                           kde statusId a title jsou unikátní
-                                           a v poli statusIdOrig jsou originální ID stejnojmenných stavů (prefixovaná) z různých instancí)  */
-    $idStatus     = 1;                  // inkrementální index pro číslování stavů (1, 2, ...)
-    unset($idstatusFormated);           // $idStatus doplněný na požadovaný počet číslic
+    $statuses     = [];                 /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
+                                           kde statusId a title jsou unikátní, statusId jsou neformátované indexy (bez prefixu instance, který v commonStatus
+                                           režimu nemá význam, a bez formátování na počet číslic požadovaný ve výstupních tabulkách)
+                                           a v poli statusIdOrig jsou originální (prefixované) ID stejnojmenných stavů z různých instancí  */
+    $idStatus     = 1;                  // umělý inkrementální index pro číslování stavů (1, 2, ...)
+    unset($idstatusFormated);           // formátovaný umělý index stavu ($idStatus doplněný na počet číslic požadovaný ve výstupních tabulkách)
 }
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
     global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
