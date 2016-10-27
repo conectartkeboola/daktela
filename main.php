@@ -148,7 +148,7 @@ function convertAddr ($str) {                                                   
     }
     return implode(" ", $addrArrOut);
 }
-function remStrDupl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
+function remStrMultipl ($str, $delimiter = " ") {                                  // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return implode($delimiter, array_unique(explode($delimiter, $str)));
 }
 function convertDate ($dateStr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
@@ -157,9 +157,9 @@ function convertDate ($dateStr) {                                               
     try {
         $date = new DateTime($dateStr);                                         // pokus o vytvoření objektu $date jako instance třídy DateTime z $dateStr
     } catch (Exception $e) {                                                    // $dateStr nevyhovuje konstruktoru třídy DateTime ...  
-        return $dateStr;                                                        // ... → vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
-    }  
-    return $date -> format( (!strpos($dateStr, "/") ? 'Y-m-d' : 'Y-d-m') );     // vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
+        return $dateStr;                                                        // ... vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
+    }                                                                           // $dateStr vyhovuje konstruktoru třídy DateTime ...  
+    return $date -> format( (!strpos($dateStr, "/") ? 'Y-m-d' : 'Y-d-m') );     // ... vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
 }
 function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
     $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
@@ -169,6 +169,23 @@ function convertMail ($mail) {                                                  
 function convertPSC ($str) {                                                    // vrátí buď PSČ ve tvaru xxx xx (validní), nebo "nevalidní PSČ ve formuláři"
     $str = str_replace(" ", "", $str);                                          // odebrání mezer => pracovní tvar validního PSČ je xxxxx
     return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevalidní PSČ ve formuláři";  // finální tvar PSČ je xxx xx
+}
+function convertFieldValue ($key, $val) {                                       // validace + případná korekce hodnot formulářových polí
+    global $fields, $keywords;                                                  // $key = název klíče from. pole; $val = hodnota form. pole určená k validaci
+    $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8");                 // title malými písmeny (jen pro test výskytu klíčových slov v title)                                                                             
+    if (in_array($titleLow, $keywords["dateEq"])) {return convertDate($val);}
+    if (in_array($titleLow, $keywords["mailEq"])) {return convertMail($val);} 
+    foreach (["date","name","addr","psc"] as $valType) {
+        foreach ($keywords[$valType] as $substr) {
+            switch ($valType) {
+                case "date":    if (substrInStr($titleLow, $substr)) {return convertDate($val);}    continue;
+                case "name":    if (substrInStr($titleLow, $substr)) {return mb_ucwords($val) ;}    continue;
+                case "addr":    if (substrInStr($titleLow, $substr)) {return convertAddr($val);}    continue;
+                case "psc" :    if (substrInStr($titleLow, $substr)) {return convertPSC($val) ;}    continue;
+            }
+        }
+    }
+    return $val;        // hodnota nepodléhající validaci a korekci (žádná část title form. pole není v $keywords[$valType]
 }
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup;
@@ -315,28 +332,13 @@ foreach ($instancesIDs as $instId) {                    // procházení tabulek 
                                                         $fieldVals = [];                    // záznam do out-only tabulky 'fieldValues'
                                                         
                                                         // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
-                                                        $val = remStrDupl($val);            // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
+                                                        $val = remStrMultipl($val);         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
                                                         $val = trim_all($val);              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
                                                         if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
                                                         // -------------------------------------------------------------------------------------------------
                                                         // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
-                                                                                                        
-                                                        $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8"); // title malými písmeny (jen pro test výskytu klíč. slov v title)
-                                                        
-                                                        if (in_array($titleLow, $keywords["dateEq"])) {$val = convertDate($val);}
-                                                        if (in_array($titleLow, $keywords["mailEq"])) {$val = convertMail($val);}
-                                                        foreach ($keywords["date"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = convertDate($val);}
-                                                        }
-                                                        foreach ($keywords["name"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = mb_ucwords($val); }
-                                                        }
-                                                        foreach ($keywords["addr"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = convertAddr($val);}
-                                                        }
-                                                        foreach ($keywords["psc"] as $substr) {
-                                                            if (substrInStr($titleLow, $substr)) {$val = convertPSC($val); }
-                                                        }
+                                                        $val = convertFieldValue($key, $val);       // je-li část názvu klíče $key v klíčových slovech $keywords, ...
+                                                                                                    // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
                                                         if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola po korekcích
                                                         $fieldVals = [
                                                             setIdLength($instId, $idFieldValue),    // idfieldvalue
