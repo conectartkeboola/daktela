@@ -159,7 +159,7 @@ function convertDate ($dateStr) {                                               
     } catch (Exception $e) {                                                    // $dateStr nevyhovuje konstruktoru třídy DateTime ...  
         return $dateStr;                                                        // ... → vrátí původní datumový řetězec (nelze převést na požadovaný tvar)
     }  
-    return $date -> format( (!strpos($dateStr, "/") ? 'Y-m-d' : 'Y-d-m') )."\n";// vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
+    return $date -> format( (!strpos($dateStr, "/") ? 'Y-m-d' : 'Y-d-m') );     // vrátí rrrr-mm-dd (u delimiteru '/' je třeba prohodit m ↔ d)
 }
 function convertMail ($mail) {                                                  // validace e-mailové adresy a převod na malá písmena
     $mail = strtolower($mail);                                                  // převod e-mailové adresy na malá písmena
