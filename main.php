@@ -93,10 +93,10 @@ function setIdLength ($instId =0,$str,$useInstPref =true) { // prefixování hod
                     }   
     }
 }                                                       // prefixují se jen vyplněné hodnoty (strlen > 0)
-function groupNameParse ($string) {                     // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
+function groupNameParse ($str) {                        // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $delim;
     $match = [];                                        // "match array"
-    preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $string, $match);
+    preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $str, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
 function phoneNumberCanonic ($str) {                    // veřejná tel. čísla omezená na číslice 0-9 (48-57D = 30-39H), bez úvodních nul (ltrim)
@@ -229,7 +229,7 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
 // vytvoření výstupních souborů
 
 foreach ($tabsAllList as $file) {
-    ${"out_".$file} =   new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
+    ${"out_".$file} = new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
 }
 // zápis hlaviček do výstupních souborů
 foreach ($tabsAll as $tabName => $columns) {
