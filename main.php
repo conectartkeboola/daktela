@@ -72,10 +72,10 @@ $keywords = [
     "name"   => ["jméno", "jmeno", "příjmení", "prijmeni", "řidič", "ceo", "makléř", "předseda"],
     "addr"   => ["adresa", "address", "město", "mesto", "obec", "část obce", "ulice", "čtvrť", "ctvrt", "okres"],
     "psc"    => ["psč", "psc"],
-    "addrVal"=> ["do","k","ke","mezi","nad","pod","před","u","ve","za","čtvrť","ctvrt","sídliště","sidliste","sídl.","sidl.","ulice","ul.",
-                 "třída","trida","tř.","tr.","nábřeží","nábř.","nabrezi","nabr.","alej","sady","park","provincie","svaz","území","uzemi",
-                 "město","mesto","království","kralovstvi","republika","stát","stat","ostrovy","emiráty","emiraty","okr.","okres","kraj",
-                 "kolonie","č.o.","c.o.","č.p.","c.p."], // místopisné předložky a označení
+    "addrVal"=> ["do","k","ke","mezi","na","nad","pod","před","při","pri","u","ve","za","čtvrť","ctvrt","sídliště","sidliste","sídl.","sidl.",
+                 "ulice","ul.","třída","trida","tř.","tr.","nábřeží","nábř.","nabrezi","nabr.","alej","sady","park","provincie","svaz","území","uzemi",
+                 "království","kralovstvi","republika","stát","stat","ostrovy", "okr.","okres","kraj", "kolonie","č.o.","c.o.","č.p.","c.p."],
+                 // místopisné předložky a označení
     "romnVal"=> ["i", "ii", "iii", "iv", "vi", "vii", "viii", "ix", "x", "xi", "xii", "xiii", "xiv", "xv", "xvi", "xvii", "xviii", "xix", "xx"],
     "noConv" => ["v"]   // nelze rozhodnout mezi místopis. předložkou a řím. číslem → nekonvertovat case    
 ];
