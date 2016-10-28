@@ -58,7 +58,7 @@ $instCommonOuts = ["groups", "statuses"];
 $idFormat = [
     "separator" => "-",     // znak oddělující ID instance od inkrementálního ID dané tabulky
     "instId"    =>   2,     // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem)
-    "id"        =>  10      // počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem)    
+    "id"        =>  10      // počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem); nedoplňovat = ""/0/NULL (~empty)    
 ];
 
 // delimitery názvu skupiny v queues.idgroup
@@ -86,7 +86,7 @@ function setIdLength ($instId =0,$str,$useInstPref =true) { // prefixování hod
     global $idFormat;
     switch (!strlen($str)) {
         case true:  return "";                              // vstupní hodnota je řetězec nulové délky
-        case false: $idFormated = sprintf('%0'.$idFormat["id"].'s', $str);
+        case false: $idFormated = !empty($idFormat["id"]) ? sprintf('%0'.$idFormat["id"].'s', $str) : $str;
                     switch ($useInstPref) {                 // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
                         case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["separator"] . $idFormated;
                         case false: return $idFormated;    
