@@ -279,8 +279,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
-            case 0:     ${"common_".ucfirst($tab)} = false;
-            case 1:     ${"common_".ucfirst($tab)} = true;
+            case 0:     ${"common".ucfirst($tab)} = false;
+            case 1:     ${"common".ucfirst($tab)} = true;
         }
     }
     
