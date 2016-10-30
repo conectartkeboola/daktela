@@ -231,10 +231,11 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
 }
 // ==============================================================================================================================================================================================
 $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
+$tabItems = [];                         // počitadlo záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
 while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
     foreach ($tabsInOut as $tab) {
-        $tabItems[$tab] = 0;            // počitadlo záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
+        $tabItems[$tab] = 0;            
     }
     
     // vytvoření výstupních souborů
