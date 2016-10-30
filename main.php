@@ -206,7 +206,7 @@ function initStatuses () {              // nastavení výchozích hodnot proměn
                                            kde statusId a title jsou unikátní, statusId jsou neformátované indexy (bez prefixu instance, který v commonStatus
                                            režimu nemá význam, a bez formátování na počet číslic požadovaný ve výstupních tabulkách)
                                            a v poli statusIdOrig jsou originální (prefixované) ID stejnojmenných stavů z různých instancí  */
-    $idStatus     = 1;                  // umělý inkrementální index pro číslování stavů (1, 2, ...)
+    $idStatus     = 0;                  // umělý inkrementální index pro číslování stavů (1, 2, ...)
     $tabItems["statuses"] = 0;          // vynulování počitadla záznamů v tabulce 'statuses'
     unset($idstatusFormated);           // formátovaný umělý index stavu ($idStatus doplněný na počet číslic požadovaný ve výstupních tabulkách)
 }
@@ -229,8 +229,8 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
     }
     return false;                       // zadaná hodnota v poli $statuses nenalezena
 }
-function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] nebo inkrementálním ID (groups, fieldValues)
-    global $idFormat;
+function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] ...
+    global $idFormat;                   // ... nebo umělým ID (groups, statuses, fieldValues)
         if ($val > pow(10, $idFormat["id"])) {
             $idFormat["id"]++;
             return true;                // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
@@ -252,9 +252,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         ${"out_".$file} = new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
     }
     // zápis hlaviček do výstupních souborů
-    foreach ($tabsAll as $tabName => $columns) {
-        $colsOut = array_key_exists($tabName, $colsInOnly) ? array_diff(array_keys($columns), $colsInOnly[$tabName]) : array_keys($columns);
-        ${"out_".$tabName} -> writeRow($colsOut);
+    foreach ($tabsAll as $tab => $cols) {
+        $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
+        ${"out_".$tab} -> writeRow($colsOut);
     }
     // načtení vstupních souborů
     foreach ($instancesIDs as $instId) {
@@ -277,7 +277,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         if (!$commonStatuses) {initStatuses();}             // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
         if (!$commonGroups)   {initGroups();  }             // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
 
-        foreach ($tabsInOut as $tab => $columns) {
+        foreach ($tabsInOut as $tab => $cols) {
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -291,7 +291,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 $fieldRow  = [];                                                    // záznam do pole formulářových polí           
                 unset($idRecord);                                                   // reset indexu záznamů do výstupní tabulky 'records'
                 $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
-                foreach ($columns as $colName => $prefixVal) {                      // konstrukce řádku výstupní tabulky (vložení hodnot řádku)
+                foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku)
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                     switch ($prefixVal) {
                         case 0: $hodnota = $row[$columnId]; break;                  // hodnota bez prefixu instance
@@ -305,7 +305,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }  
                                                     if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups 
                                                         $idGroup++;                                             // inkrement umělého ID skupiny   
-                                                        if (checkIdLengthOverflow($tab)) {                      // došlo k přetečení délky ID určené proměnnou $idGroup
+                                                        if (checkIdLengthOverflow($idGroup)) {                  // došlo k přetečení délky ID určené proměnnou $idGroup
                                                                 continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                                                             }
                                                         $idGroupFormated = setIdLength($instId,$idGroup,!$commonGroups);// $commonGroups → neprefixovat $idGroup identifikátorem instance
@@ -326,7 +326,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                         $iterRes = iterStatuses($hodnota, "title");             // výsledek hledání title v poli $statuses (umělé ID stavu nebo false)
                                                         if (!$iterRes) {                                        // stav s daným title dosud v poli $statuses neexistuje
                                                             $idStatus++;                                        // inkrement umělého ID stavů
-                                                            if (checkIdLengthOverflow($tab)) {                  // došlo k přetečení délky ID určené proměnnou $idStatus
+                                                            if (checkIdLengthOverflow($idStatus)) {             // došlo k přetečení délky ID určené proměnnou $idStatus
                                                                 continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                                                             }
                                                             $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
@@ -372,7 +372,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             // ----------------------------------------------------------------------------------------------------------------------------------
                                                             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
                                                             $idFieldValue++;                            // inkrement umělého ID hodnot formulářových polí
-                                                            if (checkIdLengthOverflow($tab)) {          // došlo k přetečení délky ID určené proměnnou $idFieldValue
+                                                            if (checkIdLengthOverflow($idFieldValue)) { // došlo k přetečení délky ID určené proměnnou $idFieldValue
                                                                 continue 8;                             // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                                                             }
                                                             // ----------------------------------------------------------------------------------------------------------------------------------  
