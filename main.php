@@ -234,7 +234,7 @@ $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet �
 $tabItems = [];                         // počitadlo záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
 while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
-    foreach ($tabsInOut as $tab) {
+    foreach ($tabsInOutList as $tab) {
         $tabItems[$tab] = 0;            
     }
     
