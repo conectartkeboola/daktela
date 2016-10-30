@@ -52,15 +52,15 @@ $tabsInOutList  = array_keys ($tabsInOut);
 $tabsAllList    = array_keys ($tabsAll);
 
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
-$instCommonOuts = ["groups", "statuses"];  
+$instCommonOuts = ["groups", "statuses", "fieldValues"];  
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
-    "separator" => "-",                                 // znak oddělující ID instance od inkrementálního ID dané tabulky
-    "instId"    => ceil(log10(count($instancesIDs))),   // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem)
-    "id"        => 6                                    // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
+    "separator" =>  "-",                                // znak oddělující ID instance od inkrementálního ID dané tabulky
+    "instId"    =>  ceil(log10(count($instancesIDs))),  // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
+    "id"        =>  6                                   // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
                                                         // příznakem potvrzujícím, že hodnota dostačovala k indexaci záznamů u všech tabulek, je proměnná $idFormatIdEnoughDigits;
-                                                        // nedoplňovat = "" / 0 / NULL / []  (~empty)    
+                                                        // nedoplňovat = "" / 0 / NULL / []  (~ hodnota, kterou lze vyhodnotit jako empty)    
 ];
 
 // delimitery názvu skupiny v queues.idgroup
@@ -191,24 +191,27 @@ function convertFieldValue ($key, $val) {                                       
 }
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup, $tabItems;
-    $groups       = [];                 // 1D-pole skupin - prvek pole má tvar groupName => idgroup
-    $idGroup      = 0;                  // umělý inkrementální index pro číslování skupin
+    $groups             = [];           // 1D-pole skupin - prvek pole má tvar groupName => idgroup
+    $idGroup            = 0;            // umělý inkrementální index pro číslování skupin
     $tabItems["groups"] = 0;            // vynulování počitadla záznamů v tabulce 'groups'
-}
-function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
-    global $fields, $idFieldValue;
-    $fields       = [];                 // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]
-    $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated, $tabItems;
-    $statuses     = [];                 /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
+    $statuses = [];                     /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
                                            kde statusId a title jsou unikátní, statusId jsou neformátované indexy (bez prefixu instance, který v commonStatus
                                            režimu nemá význam, a bez formátování na počet číslic požadovaný ve výstupních tabulkách)
                                            a v poli statusIdOrig jsou originální (prefixované) ID stejnojmenných stavů z různých instancí  */
-    $idStatus     = 0;                  // umělý inkrementální index pro číslování stavů (1, 2, ...)
+    $idStatus             = 0;          // umělý inkrementální index pro číslování stavů (1, 2, ...)
     $tabItems["statuses"] = 0;          // vynulování počitadla záznamů v tabulce 'statuses'
     unset($idstatusFormated);           // formátovaný umělý index stavu ($idStatus doplněný na počet číslic požadovaný ve výstupních tabulkách)
+}
+function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
+    global $fields;
+    $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]
+}
+function initFieldValues () {           // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
+    global $idFieldValue;
+    $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
     global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
@@ -238,12 +241,19 @@ function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedo
     return false;                       // nedošlo k přetečení (OK)
 }
 // ==============================================================================================================================================================================================
-$idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
-$tabItems = [];                         // počitadlo záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
+// načtení vstupních souborů
+    foreach ($instancesIDs as $instId) {
+        foreach ($tabsInOutList as $file) {
+            ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
+        }
+    }
+// ==============================================================================================================================================================================================
+$idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek (false = počáteční hodnota)
+$tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
 while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
     foreach ($tabsInOutList as $tab) {
-        $tabItems[$tab] = 0;            
+        $tabItems[$tab] = 0;            // úvodní nastavení nulových hodnot počitadel počtu záznamů všech OUT tabulek
     }
     
     // vytvoření výstupních souborů
@@ -255,13 +265,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     foreach ($tabsAll as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
         ${"out_".$tab} -> writeRow($colsOut);
-    }
-    // načtení vstupních souborů
-    foreach ($instancesIDs as $instId) {
-        foreach ($tabsInOutList as $file) {
-            ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
-        }
-    }
+    }    
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
 
@@ -269,13 +273,16 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
-    $commonStatuses = in_array("statuses",$instCommonOuts); // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
-    $commonGroups   = in_array("groups"  ,$instCommonOuts); // ID a názvy v out-only tabulce 'groups' požadujeme společné pro všechny instance
+    initFieldValues();                                      // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
+    $commonStatuses    = in_array("statuses"    , $instCommonOuts); // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
+    $commonGroups      = in_array("groups"      , $instCommonOuts); // ID a názvy v out-only tabulce 'groups' požadujeme společné pro všechny instance
+    $commonFieldValues = in_array("fieldValues" , $instCommonOuts); // ID a titles v out-only tabulce 'fieldValues' požadujeme společné pro všechny instance
 
     foreach ($instancesIDs as $instId) {                    // procházení tabulek jednotlivých instancí Daktela
-        initFields();                                       // nastavení výchozích hodnot proměnných popisujících formulářová pole
-        if (!$commonStatuses) {initStatuses();}             // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
-        if (!$commonGroups)   {initGroups();  }             // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
+        initFields();                                       // nastavení výchozích hodnot proměnných popisujících formulářová pole         
+        if (!$commonStatuses)    {initStatuses();   }       // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
+        if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
+        if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť  
 
         foreach ($tabsInOut as $tab => $cols) {
             
@@ -379,11 +386,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             $val = convertFieldValue($key, $val);       // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                                         // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
                                                             if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola po korekcích
+                                                            
                                                             $fieldVals = [
-                                                                setIdLength($instId, $idFieldValue),    // idfieldvalue
-                                                                $idRecord,                              // idrecord
-                                                                $fields[$key]["idfield"],               // idfield
-                                                                $val                                    // korigovaná hodnota formulářového pole
+                                                                setIdLength($instId,$idFieldValue,!$commonFieldValues), // idfieldvalue
+                                                                $idRecord,                                              // idrecord
+                                                                $fields[$key]["idfield"],                               // idfield
+                                                                $val                                                    // korigovaná hodnota formulářového pole
                                                             ];                                                                                                                                                                     
                                                             $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
                                                         }    
