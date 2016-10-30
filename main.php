@@ -22,10 +22,9 @@ $instancesIDs = array_keys($instances);
 // struktura tabulek
 $tabsInOut = [
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
-    "loginSessions"     =>  ["idloginsession" => 0, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
-    "pauseSessions"     =>  ["idpausesession" => 0, "start_time" => 0, "end_time" => 0, "duration" => 0, "idpause" => 1, "iduser" => 1],
-    "queueSessions"     =>  ["idqueuesession" => 0, "start_time" => 0, "end_time" => 0, "duration" => 0, "idqueue" => 1, "iduser" => 1],
-    // idloginsession, idpausesession, idqueuesession ... prefixování identifikátorem instance se řeší dle zapnutí/vypnutí volitelného požadavku na prefixaci
+    "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
+    "pauseSessions"     =>  ["idpausesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idpause" => 1, "iduser" => 1],
+    "queueSessions"     =>  ["idqueuesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idqueue" => 1, "iduser" => 1],
     "users"             =>  ["iduser" => 1, "title" => 0, "idinstance" => 0, "email" => 0],
     "pauses"            =>  ["idpause" => 1, "title" => 0, "idinstance" => 0, "type" => 0, "paid" => 0],
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
@@ -54,11 +53,11 @@ $tabsAllList    = array_keys ($tabsAll);
 
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
-$instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1, "loginSessions" => 1, "pauseSessions" => 1, "queueSessions" => 1];
+$instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
-    "separator" =>  "-",                                // znak oddělující ID instance od inkrementálního ID dané tabulky
+    "separator" =>  "",                                 // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
     "instId"    =>  ceil(log10(count($instancesIDs))),  // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
     "id"        =>  8                                   // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
                                                         // příznakem potvrzujícím, že hodnota dostačovala k indexaci záznamů u všech tabulek, je proměnná $idFormatIdEnoughDigits;
@@ -209,9 +208,9 @@ function initStatuses () {              // nastavení výchozích hodnot proměn
 }
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
     global $fields;
-    $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]
+    $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]    
 }
-function initFieldValues () {           // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
+function initFieldValues (){
     global $idFieldValue;
     $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
@@ -275,12 +274,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
-    initFieldValues();                                      // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
-            case 0:     ${"common".ucfirst($tab)} = false;
-            case 1:     ${"common".ucfirst($tab)} = true;
+            case 0:     ${"common".ucfirst($tab)} = false;  // záznamy v tabulce budou indexovány pro každou instanci zvlášť
+            case 1:     ${"common".ucfirst($tab)} = true;   // záznamy v tabulce budou indexovány pro všechny instance společně
         }
     }
     
@@ -312,15 +310,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     }
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                     switch ([$tab, $colName]) {
-                        case ["loginSessions", "idloginssesion"]:
-                                                    $colVals[] = $commonLoginSessions ? setIdLength(0,$hodnota,false) : setIdLength($instId,$hodnota);
-                                                    break;
-                        case ["pauseSessions", "idpausessesion"]:
-                                                    $colVals[] = $commonPauseSessions ? setIdLength(0,$hodnota,false) : setIdLength($instId,$hodnota);
-                                                    break;
-                        case ["queueSessions", "idqueuessesion"]:
-                                                    $colVals[] = $commonQueueSessions ? setIdLength(0,$hodnota,false) : setIdLength($instId,$hodnota);
-                                                    break;
                         case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                     if (!strlen($groupName)) {                                  // název skupiny ve vstupní tabulce 'queues' nevyplněn ...
                                                         $colVals[] = "";  break;                                // ... → stav se do výstupní tabulky 'queues' nezapíše
