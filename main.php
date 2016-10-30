@@ -274,6 +274,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
+    initFieldValues();                                      // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
