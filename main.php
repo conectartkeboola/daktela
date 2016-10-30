@@ -192,13 +192,13 @@ function convertFieldValue ($key, $val) {                                       
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup, $tabItems;
     $groups       = [];                 // 1D-pole skupin - prvek pole má tvar groupName => idgroup
-    $idGroup      = 1;                  // umělý inkrementální index pro číslování skupin
+    $idGroup      = 0;                  // umělý inkrementální index pro číslování skupin
     $tabItems["groups"] = 0;            // vynulování počitadla záznamů v tabulce 'groups'
 }
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
     global $fields, $idFieldValue;
     $fields       = [];                 // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]
-    $idFieldValue = 1;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
+    $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated, $tabItems;
@@ -228,6 +228,14 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
         }        
     }
     return false;                       // zadaná hodnota v poli $statuses nenalezena
+}
+function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] nebo inkrementálním ID (groups, fieldValues)
+    global $idFormat;
+        if ($val > pow(10, $idFormat["id"])) {
+            $idFormat["id"]++;
+            return true;                // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
+        }
+    return false;                       // nedošlo k přetečení (OK)
 }
 // ==============================================================================================================================================================================================
 $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
@@ -275,8 +283,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
                 
                 $tabItems[$tab]++;                                                  // inkrement počitadla záznamů v tabulce
-                if ($tabItems[$tab] > pow(10, $idFormat["id"])) {
-                    $idFormat["id"]++;
+                if (checkIdLengthOverflow($tabItems[$tab])) {                       // došlo k přetečení délky ID určené proměnnou $idFormat["id"]
                     continue 4;                                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                 }
                 
@@ -296,11 +303,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     if (!strlen($groupName)) {                                  // název skupiny ve vstupní tabulce 'queues' nevyplněn ...
                                                         $colVals[] = "";  break;                                // ... → stav se do výstupní tabulky 'queues' nezapíše
                                                     }  
-                                                    if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups                                                    
+                                                    if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups 
+                                                        $idGroup++;                                             // inkrement umělého ID skupiny   
+                                                        if (checkIdLengthOverflow($tab)) {                      // došlo k přetečení délky ID určené proměnnou $idGroup
+                                                                continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
+                                                            }
                                                         $idGroupFormated = setIdLength($instId,$idGroup,!$commonGroups);// $commonGroups → neprefixovat $idGroup identifikátorem instance
                                                         $groups[$groupName] = $idGroupFormated;                 // zápis skupiny do pole $groups
-                                                        $out_groups -> writeRow([$idGroupFormated,$groupName]); // zápis řádku do out-only tabulky 'groups' (řádek má tvar idgroup | groupName)     
-                                                        $idGroup++;                                             // inkrement umělého ID skupiny
+                                                        $out_groups -> writeRow([$idGroupFormated,$groupName]); // zápis řádku do out-only tabulky 'groups' (řádek má tvar idgroup | groupName)                                                                                                                                                              
                                                     } else {
                                                         $idGroupFormated = $groups[$groupName];                 // získání idgroup dle názvu skupiny z pole $groups
                                                     }                                                
@@ -315,10 +325,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["statuses", "title"]: if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
                                                         $iterRes = iterStatuses($hodnota, "title");             // výsledek hledání title v poli $statuses (umělé ID stavu nebo false)
                                                         if (!$iterRes) {                                        // stav s daným title dosud v poli $statuses neexistuje
+                                                            $idStatus++;                                        // inkrement umělého ID stavů
+                                                            if (checkIdLengthOverflow($tab)) {                  // došlo k přetečení délky ID určené proměnnou $idStatus
+                                                                continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
+                                                            }
                                                             $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
                                                             $statuses[$idStatus]["statusIdOrig"][] = $statIdOrig;
                                                             $colVals[] = setIdLength(0, $idStatus, false);      // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku                                        
-                                                            $idStatus++;                                        // inkrement umělého ID stavů
+                                                            
                                                         } else {                                                // stav s daným title už v poli $statuses existuje
                                                             $statuses[$iterRes]["statusIdOrig"][] = $statIdOrig;// připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
                                                             break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
@@ -357,6 +371,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
                                                             // ----------------------------------------------------------------------------------------------------------------------------------
                                                             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
+                                                            $idFieldValue++;                            // inkrement umělého ID hodnot formulářových polí
+                                                            if (checkIdLengthOverflow($tab)) {          // došlo k přetečení délky ID určené proměnnou $idFieldValue
+                                                                continue 8;                             // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
+                                                            }
+                                                            // ----------------------------------------------------------------------------------------------------------------------------------  
                                                             $val = convertFieldValue($key, $val);       // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                                         // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
                                                             if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola po korekcích
@@ -365,9 +384,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                 $idRecord,                              // idrecord
                                                                 $fields[$key]["idfield"],               // idfield
                                                                 $val                                    // korigovaná hodnota formulářového pole
-                                                            ];
-                                                            // ----------------------------------------------------------------------------------------------------------------------------------                                                                                                            
-                                                            $idFieldValue++;
+                                                            ];                                                                                                                                                                     
                                                             $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
                                                         }    
                                                     }                                                
