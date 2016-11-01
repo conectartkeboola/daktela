@@ -5,7 +5,7 @@ require_once "vendor/autoload.php";
 
 // načtení konfiguračního souboru
 $ds         = DIRECTORY_SEPARATOR;
-$dataDir    = getenv("KBC_DATADIR").$ds;
+$dataDir    = getenv("KBC_DATADIR");
 
 // pro případ importu parametrů zadaných JSON kódem v definici PHP aplikace v KBC
 $configFile = $dataDir."config.json";
@@ -30,7 +30,7 @@ $tabsInOut = [
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
     "calls"             =>  ["idcall" => 1, "call" => 0, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
                              "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
-                             "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call"=> 0,
+                             "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
                              "missed_call_time" => 0, "score" => 0, "note" => 0, "attemps" => 0, "qa_user_id" => 0, "idinstance" => 0],
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
     "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "idcall"=> 1, "created"=> 0, "created_by"=> 1],
