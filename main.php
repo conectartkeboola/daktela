@@ -282,8 +282,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
-            case 0:     ${"common".ucfirst($tab)} = false;  // záznamy v tabulce budou indexovány pro každou instanci zvlášť
-            case 1:     ${"common".ucfirst($tab)} = true;   // záznamy v tabulce budou indexovány pro všechny instance společně
+            case 0: ${"common".ucfirst($tab)}=false; break; // záznamy v tabulce budou indexovány pro každou instanci zvlášť
+            case 1: ${"common".ucfirst($tab)}=true;         // záznamy v tabulce budou indexovány pro všechny instance společně
         }
     }
     
