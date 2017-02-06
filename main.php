@@ -14,20 +14,21 @@ $config     = json_decode(file_get_contents($configFile), true);
 // proměnné a konstanty
 
 // seznam instancí Daktela
-$instances = [  1   =>  "https://ilinky.daktela.com",
-                2   =>  "https://dircom.daktela.com"
+$instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
+                2   =>  ["url" => "https://dircom.daktela.com",     "ver" => 5],
+                3   =>  ["url" => "https://conectart.daktela.com",  "ver" => 6]
 ];
-$instancesIDs = array_keys($instances);
 
 // struktura tabulek
-$tabsInOut = [
+// 
+$tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
     "pauseSessions"     =>  ["idpausesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idpause" => 1, "iduser" => 1],
     "queueSessions"     =>  ["idqueuesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idqueue" => 1, "iduser" => 1],
     "users"             =>  ["iduser" => 1, "title" => 0, "idinstance" => 0, "email" => 0],
     "pauses"            =>  ["idpause" => 1, "title" => 0, "idinstance" => 0, "type" => 0, "paid" => 0],
-    "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // "idgroup je v IN tabulce NÁZEV → neprefixovat
+    "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // 'idgroup' je v IN tabulce NÁZEV → neprefixovat
     "calls"             =>  ["idcall" => 1, "call" => 0, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
                              "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
                              "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
@@ -38,7 +39,7 @@ $tabsInOut = [
     "records"           =>  ["idrecord" => 1, "iduser" => 1, "idqueue" => 1, "idstatus" => 1, "number" => 0, "idcall" => 1, "edited" => 0,
                              "created" => 0, "idinstance" => 0,"form" => 0]
 ];
-$tabsOutOnly = [
+$tabsOutOnly = [            // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC)
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
@@ -49,8 +50,8 @@ $tabsOutOnly = [
 
 $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupních tabulek (slouží jen k internímu zpracování)
  // "název_tabulky"     =>  ["název_sloupce_1", "název_sloupce_2, ...]
-    "fields"            =>  ["name"],
-    "records"           =>  ["form"]
+    "fields"            =>  ["name"],   // systémové názvy formulářových polí, slouží jen ke spárování "čitelných" názvů polí s hodnotami polí parsovanými z JSONu
+    "records"           =>  ["form"]    // hodnoty formulářových polí jako neparsovaný JSON
 ];
 $tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
 $tabsInOutList  = array_keys ($tabsInOut);
@@ -63,7 +64,7 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
     "separator" =>  "",                                 // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
-    "instId"    =>  ceil(log10(count($instancesIDs))),  // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
+    "instId"    =>  ceil(log10(count($instances))),     // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
     "id"        =>  8                                   // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
                                                         // příznakem potvrzujícím, že hodnota dostačovala k indexaci záznamů u všech tabulek, je proměnná $idFormatIdEnoughDigits;
                                                         // nedoplňovat = "" / 0 / NULL / []  (~ hodnota, kterou lze vyhodnotit jako empty)    
@@ -195,6 +196,13 @@ function convertFieldValue ($key, $val) {                                       
     }
     return $val;        // hodnota nepodléhající validaci a korekci (žádná část title form. pole není v $keywords[$valType]
 }
+function boolValsUnify ($val) {         // dvojici booleovských hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5 (lze použít u booleovských atributů)
+    global $inst;
+    switch ($inst["ver"]) {
+        case 5: return $val;                    // v5 - hodnoty 0, 1 → propíší se
+        case 6: return $val=="1" ? $val : "0";  // v6 - hodnoty "",1 → protože jde o booleovskou proměnnou, nahradí se "" nulami
+    }
+}
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup, $tabItems;
     $groups             = [];           // 1D-pole skupin - prvek pole má tvar groupName => idgroup
@@ -248,7 +256,7 @@ function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedo
 }
 // ==============================================================================================================================================================================================
 // načtení vstupních souborů
-    foreach ($instancesIDs as $instId) {
+    foreach ($instances as $instId => $inst) {
         foreach ($tabsInOutList as $file) {
             ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
         }
@@ -287,7 +295,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         }
     }
     
-    foreach ($instancesIDs as $instId) {                    // procházení tabulek jednotlivých instancí Daktela
+    foreach ($instances as $instId => $inst) {              // procházení tabulek jednotlivých instancí Daktela    
         initFields();                                       // nastavení výchozích hodnot proměnných popisujících formulářová pole         
         if (!$commonStatuses)    {initStatuses();   }       // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
         if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
@@ -315,6 +323,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     }
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                     switch ([$tab, $colName]) {
+                        case ["pauses", "paid"]:    $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
+                                                    break;
                         case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                     if (!strlen($groupName)) {                                  // název skupiny ve vstupní tabulce 'queues' nevyplněn ...
                                                         $colVals[] = "";  break;                                // ... → stav se do výstupní tabulky 'queues' nezapíše
@@ -331,6 +341,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                         $idGroupFormated = $groups[$groupName];                 // získání idgroup dle názvu skupiny z pole $groups
                                                     }                                                
                                                     $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
+                                                    break;
+                        case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -369,7 +381,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $fieldRow["title"]= $hodnota;               // hodnota záznamu do pole formulářových polí
                                                     break;
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
-                                                    break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
+                                                    break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                                       // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
                         case ["records","idrecord"]:$idRecord  = $hodnota;                      // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     $colVals[] = $hodnota;
                                                     break;
@@ -434,7 +446,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 // ==============================================================================================================================================================================================
 // [B] tabulky společné pro všechny instance (nesestavené ze záznamů více instancí)
 // instances
-foreach ($instances as $instId => $url) {
-    $out_instances -> writeRow([$instId, $url]);
+foreach ($instances as $instId => $inst) {
+    $out_instances -> writeRow([$instId, $inst["url"]]);
 }
 ?>
