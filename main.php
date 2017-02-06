@@ -16,7 +16,7 @@ $config     = json_decode(file_get_contents($configFile), true);
 // seznam instancí Daktela
 $instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
                 2   =>  ["url" => "https://dircom.daktela.com",     "ver" => 5],
-                3   =>  ["url" => "https://conectart.daktela.com",  "ver" => 6]
+             //   3   =>  ["url" => "https://conectart.daktela.com",  "ver" => 6]
 ];
 
 // struktura tabulek
