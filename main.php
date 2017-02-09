@@ -10,6 +10,20 @@ $dataDir    = getenv("KBC_DATADIR");
 // pro případ importu parametrů zadaných JSON kódem v definici PHP aplikace v KBC
 $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
+
+// full load / incremental load výstupní tabulky 'calls'
+$callsIncrementalOutput = false;
+if (array_key_exists('callsIncrementalOutput', $config['parameters'])) {
+    if ($config['parameters']['callsIncrementalOutput'] == true) {
+        $callsIncrementalOutput = true;
+    }
+}
+/* import parametru z JSON řetězce v definici Customer Science PHP v KBC:
+  {
+    "callsIncrementalOutput": true
+  }
+  -> podrobnosti viz https://developers.keboola.com/extend/custom-science
+*/
 // ==============================================================================================================================================================================================
 // proměnné a konstanty
 
@@ -60,6 +74,9 @@ $tabsAllList    = array_keys ($tabsAll);
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
 $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
+
+// za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
+$incremHistDays = 1;
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
@@ -223,7 +240,7 @@ function initFields () {                // nastavení výchozích hodnot proměn
     global $fields;
     $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]    
 }
-function initFieldValues (){
+function initFieldValues () {
     global $idFieldValue;
     $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
@@ -303,7 +320,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
         foreach ($tabsInOut as $tab => $cols) {
             
-            foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek
+            foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
                 
                 $tabItems[$tab]++;                                                  // inkrement počitadla záznamů v tabulce
@@ -315,7 +332,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 $fieldRow  = [];                                                    // záznam do pole formulářových polí           
                 unset($idRecord);                                                   // reset indexu záznamů do výstupní tabulky 'records'
                 $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
-                foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku)
+                foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku) [= iterace sloupců]
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                     switch ($prefixVal) {
                         case 0: $hodnota = $row[$columnId]; break;                  // hodnota bez prefixu instance
@@ -342,8 +359,16 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }                                                
                                                     $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
                                                     break;
+                        case ["calls", "call_time"]:if ($callsIncrementalOutput &&                              // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory za minulý den)...
+                                                        substr($hodnota,0,10) >= date("Y-m-d",strtotime("-".$incremHistDays." days"))) {    // ... a není-li daný hovor z minulého dne...   
+                                                            continue 3;                                         // ... zahodíme konstruovaný řádek a přejdeme na konstrukci dalšího řádku                                                            
+                                                        } else {                                                
+                                                            $colVals[] = $hodnota;                              // ... call_time použijeme a normálně pokračujeme v konstrukci řádku...
+                                                        }                                                       
+                                                    break;
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
+                        case ["calls", "iduser"]:   $colVals[] = !empty($hodnota) ? $hodnota : "n/a";           // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)"                        
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
                         case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
