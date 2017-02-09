@@ -361,7 +361,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["calls", "call_time"]:if ($callsIncrementalOutput &&                              // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory za minulý den)...
                                                         substr($hodnota, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... a není-li daný hovor z minulého dne ($hodnota je datumočas) ...   
-                                                            $colVals = [];
                                                             continue 3;
                                                         } else {                                                
                                                             $colVals[] = $hodnota;                              // ... call_time použijeme a normálně pokračujeme v konstrukci řádku...
@@ -370,6 +369,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
                         case ["calls", "iduser"]:   $colVals[] = !empty($hodnota) ? $hodnota : "n/a";           // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)"                        
+                                                    break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
                         case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
