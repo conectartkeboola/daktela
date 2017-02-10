@@ -78,6 +78,11 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 // za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
 $incremHistDays = 1;
 
+// volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
+// 1) nahradí prázdný atribut calls.idcall hodnotou 'n/a';  2) na začátek tabulky 'users' vloží fiktivního "uživatele" s iduser = 'n/a' (kvůli párování v GD
+// motivace:  pro filtrování v GD je třeba mít vedle reálných iduser k dispozici i 'n/a', které GD interpretuje jako "(empty value)"
+$emptyToNA = true;
+
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
     "separator" =>  "",                                 // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
@@ -295,7 +300,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     foreach ($tabsAll as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
         ${"out_".$tab} -> writeRow($colsOut);
-    }    
+    }
+    // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
+    if ($emptyToNA) {
+        $userNA = ["n/a", "<uživatel neuveden>", "", ""];      // hodnoty [iduser, title, idinstance, email]
+        $out_users -> writeRow($userNA);
+    }
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
 
@@ -368,7 +378,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
-                        case ["calls", "iduser"]:   $colVals[] = !empty($hodnota) ? $hodnota : "n/a";           // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)"                        
+                        case ["calls", "iduser"]:   $colVals[] = $emptyToNA && empty($hodnota) ? "n/a":$hodnota;// prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]                       
                                                     break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
