@@ -12,16 +12,19 @@ $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
 
 // full load / incremental load výstupní tabulky 'calls'
-$callsIncrementalOutput = false;
-if (array_key_exists('callsIncrementalOutput', $config['parameters'])) {
-    if ($config['parameters']['callsIncrementalOutput'] == true) {
-        $callsIncrementalOutput = true;
-    }
-}
+$incrementalOn = !empty($config['parameters']['callsIncrementalOutput']['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
+
+// za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
+$jsonHistDays = $config['parameters']['callsIncrementalOutput']['incremHistDays'];
+$incremHistDays = $incrementalOn && !empty($jsonHistDays) && is_numeric($jsonHistDays) ? $jsonHistDays : 1;
+
 /* import parametru z JSON řetězce v definici Customer Science PHP v KBC:
-  {
-    "callsIncrementalOutput": true
-  }
+    {
+      "callsIncrementalOutput": {
+        "incrementalOn": true,
+        "incremHistDays": 1
+      }
+    }
   -> podrobnosti viz https://developers.keboola.com/extend/custom-science
 */
 // ==============================================================================================================================================================================================
@@ -74,9 +77,6 @@ $tabsAllList    = array_keys ($tabsAll);
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
 $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
-
-// za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
-$incremHistDays = 1;
 
 // volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
 // 1) nahradí prázdný atribut calls.idcall hodnotou 'n/a';  2) na začátek tabulky 'users' vloží fiktivního "uživatele" s iduser = 'n/a' (kvůli párování v GD
@@ -369,7 +369,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }                                                
                                                     $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
                                                     break;
-                        case ["calls", "call_time"]:if ($callsIncrementalOutput &&                              // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory za minulý den)...
+                        case ["calls", "call_time"]:if ($incrementalOn &&                                       // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory za minulý den)...
                                                         substr($hodnota, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... a není-li daný hovor z minulého dne ($hodnota je datumočas) ...   
                                                             continue 3;
                                                         } else {                                                
