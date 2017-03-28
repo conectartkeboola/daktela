@@ -37,7 +37,7 @@ $instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
 ];
 
 // struktura tabulek
-// 
+ 
 $tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
@@ -299,11 +299,13 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     // zápis hlaviček do výstupních souborů
     foreach ($tabsAll as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
+        $colPrf  = strtolower($tab)."_";                    // prefix názvů sloupců ve výstupní tabulce (např. "loginSessions" → "loginsessions_")
+        $colsOut = preg_filter("/^/", $colPrf, $colsOut);   // prefixace názvů sloupců ve výstupních tabulkách názvy tabulek kvůli rozlišení v GD (např. "title" → "groups_title")
         ${"out_".$tab} -> writeRow($colsOut);
     }
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
-        $userNA = ["n/a", "<uživatel neuveden>", "", ""];      // hodnoty [iduser, title, idinstance, email]
+        $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
         $out_users -> writeRow($userNA);
     }
     // ==========================================================================================================================================================================================
@@ -330,17 +332,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
         foreach ($tabsInOut as $tab => $cols) {
             
-            // operace před zpracováním dat v celé tabulce
-            
-            // konstrukce tabulky 'fieldsOlap' - hlavička (tuto hlavičku lze vygenerovat až po zpracování tabulky 'fields', když je vygenerováno pole $fields)
-            if ($tab == "records") {
-                $olapHead = ["idrecord"];                                          // názvy sloupců (hlavička) tabulky 'fieldsOlap' - 1. sloupec je vždy 'idrecord'
-                foreach ($fields as $fieldName => $fieldParams) {
-                    $olapHead[] = $fieldParams["idfield"]."-".$fieldParams["title"]." (".$fieldName.")";
-                }                                                                   // názvy dalších sloupců tabulky 'fieldsOlap'
-            }
-            
-            // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
                 
@@ -445,10 +436,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
                                                             $val = remStrMultipl($val);         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
                                                             $val = trim_all($val);              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
-                                                            if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi
-                                                            $val = convertFieldValue($key,$val);// je-li část názvu klíče $key v klíčových slovech $keywords, ...
-                                                                                                // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
-                                                            if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola po korekcích                                                                                
+                                                            if (!strlen($val)) {continue;}      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
                                                             // ----------------------------------------------------------------------------------------------------------------------------------
                                                             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
                                                             $idFieldValue++;                            // inkrement umělého ID hodnot formulářových polí
@@ -456,7 +444,10 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                 continue 8;                             // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                                                             }
                                                             // ----------------------------------------------------------------------------------------------------------------------------------  
-                                                            // konstrukce out-only tabulky 'fieldValues' - datové řádky
+                                                            $val = convertFieldValue($key, $val);       // je-li část názvu klíče $key v klíčových slovech $keywords, ...
+                                                                                                        // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
+                                                            if (!strlen($val)) {continue;}              // prázdná hodnota prvku formulářového pole - kontrola po korekcích
+                                                            
                                                             $fieldVals = [
                                                                 setIdLength($instId,$idFieldValue,!$commonFieldValues), // idfieldvalue
                                                                 $idRecord,                                              // idrecord
@@ -464,13 +455,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                 $val                                                    // korigovaná hodnota formulářového pole
                                                             ];                                                                                                                                                                     
                                                             $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
-                                                                                                                        
-                                                            // konstrukce out-only tabulky 'fieldsOlap' - datové řádky
-                                                            $fieldVals = [$idRecord];                   // záznam do out-only tabulky 'fieldsOlap'
-                                                            foreach ($fields as $fieldName => $fieldParams) {
-                                                                $fieldVals[] = $fieldName == $key ? $val : "";  // zápis hodnot form. polí do odpovídajících sloupců (jinde prázdné hodnoty)
-                                                            }
-                                                            $out_fieldsOlap -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldsOlap'
                                                         }    
                                                     }                                                
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"    
