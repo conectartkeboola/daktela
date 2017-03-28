@@ -37,7 +37,7 @@ $instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
 ];
 
 // struktura tabulek
- 
+// 
 $tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
@@ -299,13 +299,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     // zápis hlaviček do výstupních souborů
     foreach ($tabsAll as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
-        $colPrf  = strtolower($tab)."_";                    // prefix názvů sloupců ve výstupní tabulce (např. "loginSessions" → "loginsessions_")
-        $colsOut = preg_filter("/^/", $colPrf, $colsOut);   // prefixace názvů sloupců ve výstupních tabulkách názvy tabulek kvůli rozlišení v GD (např. "title" → "groups_title")
         ${"out_".$tab} -> writeRow($colsOut);
     }
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
-        $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
+        $userNA = ["n/a", "<uživatel neuveden>", "", ""];      // hodnoty [iduser, title, idinstance, email]
         $out_users -> writeRow($userNA);
     }
     // ==========================================================================================================================================================================================
