@@ -250,7 +250,7 @@ function initFieldValues () {
     $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
-    global $statuses, $instId;          // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
+    global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
     foreach ($statuses as $statId => $statRow) {
         switch ($valType) {
             case "title":           // $statRow[$valType] je string
@@ -259,7 +259,6 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
                                     }
                                     break;
             case "statusIdOrig":    // $statRow[$valType] je 1D-pole
-                                    $val = setIdLength($instId, $val);  // prefixace originálního ID stavu číslem instance (stav stejného ID může v různých instancích znamenat něco jiného)
                                     foreach ($statRow[$valType] as $statVal) {
                                         if ($statVal == $val) {     // zadaná hodnota v poli $statuses nalezena
                                             return $statId;         // ... → vrátí id (umělé) položky pole $statuses, v níž se hodnota nachází
@@ -306,7 +305,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     }
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
-        $userNA = ["n/a", "(empty value)", "", ""];   // hodnoty [iduser, title, idinstance, email]
+        $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
         $out_users -> writeRow($userNA);
     }
     // ==========================================================================================================================================================================================
@@ -386,9 +385,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
                         case["statuses","idstatus"]:if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance  
-                                                        $statIdOrig = setIdLength($instId, $hodnota);           // uložení originálního (prefixovaného) ID stavu do proměnné $statIdOrig
+                                                        $statIdOrig = $hodnota;                                 // uložení originálního (prefixovaného) ID stavu do proměnné $statIdOrig
                                                     } else {                                                    // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť
-                                                        $colVals[]  = setIdLength($instId, $hodnota);           // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku
+                                                        $colVals[]  = $hodnota;                                 // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku
                                                     }              
                                                     break;
                         case ["statuses", "title"]: if ($commonStatuses) {                                      // ID a názvy v tabulce 'statuses' požadujeme společné pro všechny instance
@@ -403,8 +402,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             $colVals[] = setIdLength(0, $idStatus, false);      // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku                                        
                                                             
                                                         } else {                                                // stav s daným title už v poli $statuses existuje
-                                                            $statuses[$iterRes]["statusIdOrig"][] = $statIdOrig;
-                                                                                                                // připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
+                                                            $statuses[$iterRes]["statusIdOrig"][] = $statIdOrig;// připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
                                                             break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
                                                         }
                                                         unset($statIdOrig);                                     // unset proměnné s uloženou hodnotou originálního (prefixovaného) ID stavu (úklid)
@@ -412,7 +410,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = $hodnota;                                      // vložení title stavu jako druhého prvku do konstruovaného řádku                                           
                                                     break;
                         case ["recordSnapshots", "idstatus"]:
-                                                    $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : setIdLength($instId, $hodnota);
+                                                    $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
                         case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                     $fieldRow["idfield"]= $hodnota;             // hodnota záznamu do pole formulářových polí
@@ -425,7 +423,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["records","idrecord"]:$idRecord  = $hodnota;                      // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     $colVals[] = $hodnota;
                                                     break;
-                        case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : setIdLength($instId, $hodnota);
+                        case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
