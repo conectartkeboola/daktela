@@ -250,7 +250,7 @@ function initFieldValues () {
     $idFieldValue = 0;                  // umělý inkrementální index pro číslování hodnot formulářových polí 
 }
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
-    global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
+    global $statuses, $instId;          // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
     foreach ($statuses as $statId => $statRow) {
         switch ($valType) {
             case "title":           // $statRow[$valType] je string
