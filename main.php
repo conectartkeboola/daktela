@@ -305,7 +305,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     }
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
-        $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
+        $userNA = ["n/a", "(empty value)", "", ""];   // hodnoty [iduser, title, idinstance, email]
         $out_users -> writeRow($userNA);
     }
     // ==========================================================================================================================================================================================
@@ -398,11 +398,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                 continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                                                             }
                                                             $statuses[$idStatus]["title"]          = $hodnota;  // zápis hodnot stavu do pole $statuses
-                                                            $statuses[$idStatus]["statusIdOrig"][] = $statIdOrig;
+                                                            $statuses[$idStatus]["statusIdOrig"][] = setIdLength($instId, $statIdOrig);
                                                             $colVals[] = setIdLength(0, $idStatus, false);      // vložení formátovaného ID stavu jako prvního prvku do konstruovaného řádku                                        
                                                             
                                                         } else {                                                // stav s daným title už v poli $statuses existuje
-                                                            $statuses[$iterRes]["statusIdOrig"][] = $statIdOrig;// připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
+                                                            $statuses[$iterRes]["statusIdOrig"][] = setIdLength($instId, $statIdOrig);
+                                                                                                                // připsání orig. ID stavu jako dalšího prvku do vnořeného 1D-pole ve 3D-poli $statuses
                                                             break;                                              // aktuálně zkoumaný stav v poli $statuses už existuje
                                                         }
                                                         unset($statIdOrig);                                     // unset proměnné s uloženou hodnotou originálního (prefixovaného) ID stavu (úklid)
@@ -410,7 +411,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = $hodnota;                                      // vložení title stavu jako druhého prvku do konstruovaného řádku                                           
                                                     break;
                         case ["recordSnapshots", "idstatus"]:
-                                                    $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                                                    $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses(setIdLength($instId, $hodnota)), false) : setIdLength($instId, $hodnota);
                                                     break;
                         case ["fields", "idfield"]: $colVals[] = $hodnota;
                                                     $fieldRow["idfield"]= $hodnota;             // hodnota záznamu do pole formulářových polí
@@ -423,7 +424,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["records","idrecord"]:$idRecord  = $hodnota;                      // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     $colVals[] = $hodnota;
                                                     break;
-                        case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                        case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses(setIdLength($instId, $hodnota)), false) : setIdLength($instId, $hodnota);
                                                     break;
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
