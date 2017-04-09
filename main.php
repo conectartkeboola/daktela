@@ -477,8 +477,18 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             }   // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // operace po zpracování dat v celé tabulce
             // < ... nothing to do ... >    
-        }        
+        }
+        // operace po zpracování dat ve všech tabulkách jedné instance
     }
+    // operace po zpracování dat ve všech tabulkách všech instancí
+    
+    // diagnostická tabulka - výstup pole $statuses
+    $out_arrStat -> writeRow(["id_status_internal", "title", "id_statuses_orig"]);
+    foreach ($statuses as $statId => $statVals) {
+        $colStatusesVals = [$statId, json_encode($statVals["title"]), json_encode($statVals["statusIdOrig"])];
+        $out_arrStat -> writeRow($colStatusesVals);
+    }
+    
     $idFormatIdEnoughDigits = true;         // potvrzení, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
 }
 // ==============================================================================================================================================================================================
