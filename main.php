@@ -483,6 +483,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     // operace po zpracování dat ve všech tabulkách všech instancí
     
     // diagnostická tabulka - výstup pole $statuses
+    $out_arrStat = new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_arrStat.csv");
     $out_arrStat -> writeRow(["id_status_internal", "title", "id_statuses_orig"]);
     foreach ($statuses as $statId => $statVals) {
         $colStatusesVals = [$statId, json_encode($statVals["title"]), json_encode($statVals["statusIdOrig"])];
