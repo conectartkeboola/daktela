@@ -51,7 +51,7 @@ $tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstup
                              "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
                              "missed_call_time" => 0, "score" => 0, "note" => 0, "attemps" => 0, "qa_user_id" => 0, "idinstance" => 0],
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
-    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "idcall"=> 1, "created"=> 0, "created_by"=> 1],
+    "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "idcall"=> 1, "created"=> 0, "created_by"=> 1, "nextcall" => 0],
     "fields"            =>  ["idfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0],    
     "records"           =>  ["idrecord" => 1, "iduser" => 1, "idqueue" => 1, "idstatus" => 1, "number" => 0, "idcall" => 1, "edited" => 0,
                              "created" => 0, "idinstance" => 0,"form" => 0]
