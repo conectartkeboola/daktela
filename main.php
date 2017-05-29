@@ -502,7 +502,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         // TABULKY V6 ONLY                            
                         case ["contacts", "form"]:  $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
                                                     break;
-                        case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);                        
+                        case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);
+                                                    break;
                         case ["tickets", "form"]:   $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
                                                     break;
                         case ["crmRecords", "form"]:$colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
