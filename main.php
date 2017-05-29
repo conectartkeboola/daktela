@@ -38,7 +38,7 @@ $instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
 
 // struktura tabulek
  
-$tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
+$tabsInOutV56 = [            // vstuně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
     "pauseSessions"     =>  ["idpausesession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "idpause" => 1, "iduser" => 1],
@@ -56,23 +56,59 @@ $tabsInOut = [              // vstuně-výstupní tabulky (načtou se jako vstup
     "records"           =>  ["idrecord" => 1, "iduser" => 1, "idqueue" => 1, "idstatus" => 1, "number" => 0, "idcall" => 1, "edited" => 0,
                              "created" => 0, "idinstance" => 0,"form" => 0]
 ];
+// nutno dodržet pořadí tabulek:
+// - 'records' a 'recordSnapshots' se odkazijí na 'statuses'.'idstatus' → musí být uvedeny až za 'statuses' (pro případ použití commonStatuses)
+// - 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
+$tabsInOutV6 = [            // vstuně-výstupní tabulkypoužívané pouze u Daktely v6
+    "databases"         =>  ["iddatabase" => 1, "name" => 0, "title" => 0, "idqueue" => 1, "description" => 0, "stage" => 0, "deleted" => 0, "time" => 0, "idinstance" => 0],
+    "contacts"          =>  ["idcontact" => 1, "name" => 0, "title" => 0, "firstname" => 0, "lastname" => 0, "idaccount" => 1, "iduser" => 1, "description" => 0,
+                             "deleted" => 0, "idinstance" => 0, "form" => 0],    
+    "ticketSla"         =>  ["idticketsla" => 1, "name" => 0, "title" => 0, "response_low" => 0, "response_normal" => 0, "response_high" => 0, "solution_low" => 0,
+                             "solution_normal" => 0, "solution_high" => 0, "idinstance" => 0],
+    "accounts"          =>  ["idaccount" => 1, "name" => 0, "title" => 0, "idticketsla" => 1, "survey" => 0, "iduser" => 1, "description" => 0, "deleted" => 0, "idinstance" => 0],
+    "ticketCategories"  =>  ["idticketcategory" => 1, "name" => 0, "title" => 0, "idticketsla" => 1, "idqueue" => 1, "survey" => 0, "template_email" => 0,
+                             "template_page" => 0, "deleted" => 0, "idinstance" => 0],
+    "tickets"           =>  ["idticket" => 1, "name" => 0, "title" => 0, "idticketcategory" => 1, "iduser" => 1, "email" => 0, "idcontact" => 1, "idstatus" => 1,
+                             "description" => 1, "stage" => 0, "priority" => 0, "sla_deadtime" => 0, "sla_change" => 0, "sla_notify" => 0, "sla_duration" => 0,
+                             "sla_custom" => 0, "survey" => 0, "survey_offered" => 0, "satisfaction" => 0, "satisfaction_comment" => 0, "reopen" => 0, "deleted" => 0,
+                             "created" => 0, "edited" => 0, "edited_by" => 1, "first_answer" => 0, "first_answer_duration" => 0, "closed" => 0, "unread" => 0,
+                             "idinstance" => 0, "form" => 0],    
+    "crmRecordTypes"    =>  ["idcrmrecordtype" => 1, "name" => 0, "title" => 0, "description" => 0, "deleted" => 0, "created" => 0, "idinstance" => 0],
+    "crmRecords"        =>  ["idcrmrecord" => 1, "name" => 0, "title" => 0, "idcrmrecordtype" => 1, "iduser" => 1, "idcontact" => 1, "idaccount" => 1, "idticket" => 1,
+                             "idstatus" => 1, "description" => 0, "deleted" => 0, "edited" => 0, "created" => 0, "stage" => 0, "idinstance"  => 0, "form"  => 1],
+    "crmRecordSnapshots"=>  ["idcrmrecordsnapshot" => 1, "name" => 0, "title" => 0, "idcontact" => 1, "idaccount" => 1, "idticket" => 1, "idcrmrecord" => 1, "iduser" => 1,
+                             "idstatus" => 1, "idcrmrecordtype" => 1, "description" => 0, "deleted" => 0, "created_by" => 0, "time" => 0, "stage" => 0, "idinstance" => 0],    
+    "activities"        =>  ["idactivity"  => 1, "name" => 0, "title" => 0, "idcontact" => 1, "idticket" => 1, "idqueue" => 1, "iduser" => 1, "idrecord" => 1,
+                             "idstatus" => 1, "action" => 0, "type" => 0, "priority" => 0, "description" => 0, "time" => 0, "time_wait" => 0, "time_open" => 0,
+                             "time_close" => 0, "created_by" => 1, "idinstance" => 0, "item => 0"]       
+];
+$tabsInOut = [
+    5                   =>  $tabsInOutV56,
+    6                   =>  array_merge($tabsInOutV56, $tabsInOutV6)
+];
 $tabsOutOnly = [            // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC)
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
-// nutno dodržet pořadí tabulek:
-// - 'records' a 'recordSnapshots' se odkazijí na 'statuses'.'idstatus' → musí být uvedeny až za 'statuses' (pro případ použití commonStatuses)
-// - 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 
 $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupních tabulek (slouží jen k internímu zpracování)
  // "název_tabulky"     =>  ["název_sloupce_1", "název_sloupce_2, ...]
     "fields"            =>  ["name"],   // systémové názvy formulářových polí, slouží jen ke spárování "čitelných" názvů polí s hodnotami polí parsovanými z JSONu
     "records"           =>  ["form"]    // hodnoty formulářových polí jako neparsovaný JSON
 ];
-$tabsAll        = array_merge($tabsInOut, $tabsOutOnly);
-$tabsInOutList  = array_keys ($tabsInOut);
-$tabsAllList    = array_keys ($tabsAll);
+$tabsAll = [      
+    5                   => array_merge($tabsInOut[5], $tabsOutOnly),
+    6                   => array_merge($tabsInOut[6], $tabsOutOnly)
+];
+$tabsInOutList = [
+    5                   => array_keys($tabsInOut[5]),
+    6                   => array_keys($tabsInOut[6])
+];
+$tabsAllList = [
+    5                   => array_keys($tabsAll[5]),
+    6                   => array_keys($tabsAll[6])
+];
 
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
@@ -202,7 +238,7 @@ function convertPSC ($str) {                                                    
     return (is_numeric($str) && strlen($str) == 5) ? substr($str, 0, 3)." ".substr($str, 3, 2) : "nevalidní PSČ ve formuláři";  // finální tvar PSČ je xxx xx
 }
 function convertFieldValue ($key, $val) {                                       // validace + případná korekce hodnot formulářových polí
-    global $fields, $keywords;                                                  // $key = název klíče from. pole; $val = hodnota form. pole určená k validaci
+    global $fields, $keywords;                                                  // $key = název klíče form. pole; $val = hodnota form. pole určená k validaci
     $titleLow = mb_strtolower($fields[$key]["title"], "UTF-8");                 // title malými písmeny (jen pro test výskytu klíčových slov v title)                                                                             
     if (in_array($titleLow, $keywords["dateEq"])) {return convertDate($val);}
     if (in_array($titleLow, $keywords["mailEq"])) {return convertMail($val);} 
@@ -279,7 +315,7 @@ function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedo
 // ==============================================================================================================================================================================================
 // načtení vstupních souborů
     foreach ($instances as $instId => $inst) {
-        foreach ($tabsInOutList as $file) {
+        foreach ($tabsInOutList[$inst["ver"]] as $file) {
             ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
         }
     }
@@ -288,16 +324,16 @@ $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet �
 $tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
 while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
-    foreach ($tabsInOutList as $tab) {
+    foreach ($tabsInOutList[6] as $tab) {
         $tabItems[$tab] = 0;            // úvodní nastavení nulových hodnot počitadel počtu záznamů všech OUT tabulek
     }
     
     // vytvoření výstupních souborů
-    foreach ($tabsAllList as $file) {
+    foreach ($tabsAllList[6] as $file) {
         ${"out_".$file} = new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
     }
     // zápis hlaviček do výstupních souborů
-    foreach ($tabsAll as $tab => $cols) {
+    foreach ($tabsAll[6] as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
         $colPrf  = strtolower($tab)."_";                    // prefix názvů sloupců ve výstupní tabulce (např. "loginSessions" → "loginsessions_")
         $colsOut = preg_filter("/^/", $colPrf, $colsOut);   // prefixace názvů sloupců ve výstupních tabulkách názvy tabulek kvůli rozlišení v GD (např. "title" → "groups_title")
@@ -330,7 +366,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
         if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť  
 
-        foreach ($tabsInOut as $tab => $cols) {
+        foreach ($tabsInOut[$inst["ver"]] as $tab => $cols) {
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -352,6 +388,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     }
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                     switch ([$tab, $colName]) {
+                        // TABULKY V5+6
                         case ["pauses", "paid"]:    $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
                         case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
@@ -459,8 +496,20 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             $out_fieldValues -> writeRow($fieldVals);   // zápis řádku do out-only tabulky 'fieldValues'
                                                         }    
                                                     }                                                
-                                                    break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"    
-                        case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId
+                                                    break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"  
+                        case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId    
+                        // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
+                        // TABULKY V6 ONLY                            
+                        case ["contacts", "form"]:  $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                                                    break;
+                        case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);                        
+                        case ["tickets", "form"]:   $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                                                    break;
+                        case ["crmRecords", "form"]:$colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                                                    break;
+                        case ["activities", "item"]:$colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                                                    break; 
+                        // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                  
                         default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
                     }
                     $columnId++;                                                    // přechod na další sloupec (buňku) v rámci řádku                
