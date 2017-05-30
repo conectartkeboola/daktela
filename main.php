@@ -80,7 +80,7 @@ $tabsInOutV6 = [            // vstuně-výstupní tabulkypoužívané pouze u Da
                              "idstatus" => 1, "idcrmrecordtype" => 1, "description" => 0, "deleted" => 0, "created_by" => 0, "time" => 0, "stage" => 0, "idinstance" => 0],    
     "activities"        =>  ["idactivity"  => 1, "name" => 0, "title" => 0, "idcontact" => 1, "idticket" => 1, "idqueue" => 1, "iduser" => 1, "idrecord" => 1,
                              "idstatus" => 1, "action" => 0, "type" => 0, "priority" => 0, "description" => 0, "time" => 0, "time_wait" => 0, "time_open" => 0,
-                             "time_close" => 0, "created_by" => 1, "idinstance" => 0, "item => 0"]       
+                             "time_close" => 0, "created_by" => 1, "idinstance" => 0, "item" => 0]       
 ];
 $tabsInOut = [
     5                   =>  $tabsInOutV56,
@@ -508,7 +508,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["crmRecords", "form"]:$colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
                                                     break;
-                        case ["activities", "item"]:$colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                        case ["activities", "item"]:$colVals[] = $hodnota;          // obecně objekt (JSON), zatím propisováno do OUT bucketu bez parsování (potřebuji 'duration' v performance reportu)
                                                     break; 
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                  
                         default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
