@@ -62,7 +62,7 @@ $tabsInOutV56 = [            // vstuně-výstupní tabulky (načtou se jako vstu
 $tabsInOutV6 = [            // vstuně-výstupní tabulkypoužívané pouze u Daktely v6
     "databases"         =>  ["iddatabase" => 1, "name" => 0, "title" => 0, "idqueue" => 1, "description" => 0, "stage" => 0, "deleted" => 0, "time" => 0, "idinstance" => 0],
     "contacts"          =>  ["idcontact" => 1, "name" => 0, "title" => 0, "firstname" => 0, "lastname" => 0, "idaccount" => 1, "iduser" => 1, "description" => 0,
-                             "deleted" => 0, "idinstance" => 0, "form" => 0],    
+                             "deleted" => 0, "idinstance" => 0, "form" => 0, "number" => 0],    
     "ticketSla"         =>  ["idticketsla" => 1, "name" => 0, "title" => 0, "response_low" => 0, "response_normal" => 0, "response_high" => 0, "solution_low" => 0,
                              "solution_normal" => 0, "solution_high" => 0, "idinstance" => 0],
     "accounts"          =>  ["idaccount" => 1, "name" => 0, "title" => 0, "idticketsla" => 1, "survey" => 0, "iduser" => 1, "description" => 0, "deleted" => 0, "idinstance" => 0],
@@ -500,7 +500,15 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId    
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
                         // TABULKY V6 ONLY                            
-                        case ["contacts", "form"]:  $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
+                        case ["contacts", "form"]:  $contactsForm = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
+                                                    $telNum = "";
+                                                    if (array_key_exists("number", $contactsForm)) {    // zatím z objektu (JSON) parsuji jen "number" (tel. číslo) pro potřeby CRM records reportu
+                                                        if (array_key_exists(0, $contactsForm["number"])) {
+                                                            $telNum = $contactsForm["number"][0];       // $contactsForm["number"] ... obecně 1D-pole, kde může být více tel. čísel → beru jen první
+                                                        }
+                                                    }
+                                                    $colVals[] = "";                            // hodnota sloupce "form" = "" - celý 'form' zatím neparsován
+                                                    $colVals[] = phoneNumberCanonic($telNum);   // hodnota sloupce "number" - tel. číslo parsované z "contacts"."form" pro účely CRM records reportu
                                                     break;
                         case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);
                                                     break;
