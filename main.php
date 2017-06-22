@@ -510,6 +510,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = "";                            // hodnota sloupce "form" = "" - celý 'form' zatím neparsován
                                                     $colVals[] = phoneNumberCanonic($telNum);   // hodnota sloupce "number" - tel. číslo parsované z "contacts"."form" pro účely CRM records reportu
                                                     break;
+                        case ["contacts","number"]: break;                          // hodnota byla vytvořena v case ["contacts", "form"] → už žádná akce                           
                         case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);
                                                     break;
                         case ["tickets", "form"]:   $colVals[] = "";                // obecně objekt (JSON), zatím neparsováno
