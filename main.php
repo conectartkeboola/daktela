@@ -11,19 +11,26 @@ $dataDir    = getenv("KBC_DATADIR");
 $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
 
+// parametry importované z konfiguračního JSON v KBC
+$callsIncrementalOutput = $config['parameters']['callsIncrementalOutput'];
+$diagOutOptions         = $config['parameters']['diagOutOptions'];
+
 // full load / incremental load výstupní tabulky 'calls'
-$incrementalOn = !empty($config['parameters']['callsIncrementalOutput']['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
+$incrementalOn = !empty($callsIncrementalOutput['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
 
 // za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
-$jsonHistDays = $config['parameters']['callsIncrementalOutput']['incremHistDays'];
+$jsonHistDays = $callsIncrementalOutput['incremHistDays'];
 $incremHistDays = $incrementalOn && !empty($jsonHistDays) && is_numeric($jsonHistDays) ? $jsonHistDays : 1;
 
 /* import parametru z JSON řetězce v definici Customer Science PHP v KBC:
     {
-      "callsIncrementalOutput": {
-        "incrementalOn": true,
-        "incremHistDays": 1
-      }
+        "callsIncrementalOutput": {
+            "incrementalOn": true,
+            "incremHistDays": 3
+        },
+        "diagOutOptions": {
+            "basicStatusInfo": true
+        }
     }
   -> podrobnosti viz https://developers.keboola.com/extend/custom-science
 */
@@ -302,24 +309,28 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
                                     }
         }        
     }
-    return false;                       // zadaná hodnota v poli $statuses nenalezena
+    return false;                   // zadaná hodnota v poli $statuses nenalezena
 }
-function checkIdLengthOverflow ($val) { // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] ...
-    global $idFormat;                   // ... nebo umělým ID (groups, statuses, fieldValues)
+function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] ...
+    global $idFormat, $tab, $diagOutOptions;// ... nebo umělým ID (groups, statuses, fieldValues)
         if ($val > pow(10, $idFormat["id"])) {
+            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU V TABULCE ".$tab."... " : "";     // volitelný diagnostický výstup do logu
             $idFormat["id"]++;
-            return true;                // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
+            return true;                    // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
         }
-    return false;                       // nedošlo k přetečení (OK)
+    return false;                           // nedošlo k přetečení (OK)
 }
+echo $diagOutOptions["basicStatusInfo"] ? "PROMĚNNÉ A FUNKCE ZAVEDENY... " : "";        // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
 // načtení vstupních souborů
-    foreach ($instances as $instId => $inst) {
-        foreach ($tabsInOutList[$inst["ver"]] as $file) {
-            ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
-        }
+foreach ($instances as $instId => $inst) {
+    foreach ($tabsInOutList[$inst["ver"]] as $file) {
+        ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
     }
+}
+echo $diagOutOptions["basicStatusInfo"] ? "VSTUPNÍ SOUBORY NAČTENY... " : "";           // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
+echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ DAT... " : "";           // volitelný diagnostický výstup do logu
 $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek (false = počáteční hodnota)
 $tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
@@ -339,6 +350,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         $colsOut = preg_filter("/^/", $colPrf, $colsOut);   // prefixace názvů sloupců ve výstupních tabulkách názvy tabulek kvůli rozlišení v GD (např. "title" → "groups_title")
         ${"out_".$tab} -> writeRow($colsOut);
     }
+    echo $diagOutOptions["basicStatusInfo"] ? "VÝSTUPNÍ SOUBORY VYTVOŘENY... " : "";    // volitelný diagnostický výstup do logu
+    //
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
         $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
@@ -360,13 +373,16 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         }
     }
     
-    foreach ($instances as $instId => $inst) {              // procházení tabulek jednotlivých instancí Daktela    
+    foreach ($instances as $instId => $inst) {              // procházení tabulek jednotlivých instancí Daktela
         initFields();                                       // nastavení výchozích hodnot proměnných popisujících formulářová pole         
         if (!$commonStatuses)    {initStatuses();   }       // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
         if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
-        if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť  
+        if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť
+        echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ INSTANCE ".$instId."... " : "";  // volitelný diagnostický výstup do logu
 
         foreach ($tabsInOut[$inst["ver"]] as $tab => $cols) {
+            
+            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab."... " : "";  // volitelný diagnostický výstup do logu
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -538,8 +554,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             }   // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // operace po zpracování dat v celé tabulce
             // < ... nothing to do ... >    
+            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab."... " : "";     // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
+        // < ... nothing to do ... >  
+        echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."... " : "";     // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
     
@@ -559,4 +578,5 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 foreach ($instances as $instId => $inst) {
     $out_instances -> writeRow([$instId, $inst["url"]]);
 }
+echo $diagOutOptions["basicStatusInfo"] ? "TRANSFORMACE DOKONČENA" : "";            // volitelný diagnostický výstup do logu
 ?>
