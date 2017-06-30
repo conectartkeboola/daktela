@@ -101,11 +101,11 @@ $tabsOutOnlyV56 = [         // tabulky, které vytváří transformace a objevuj
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
-$tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
+/*$tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
     "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
-];
+]; */
 $tabsOutOnly = [
     5                   =>  $tabsOutOnlyV56,
     6                   =>  array_merge($tabsOutOnlyV56, $tabsOutOnlyV6)
@@ -417,7 +417,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
         foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {
             
-            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab."\n" : "";    // volitelný diagnostický výstup do logu
+            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab." z instance ".$instId."\n" : ""; // volitelný diagnostický výstup do logu
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -503,16 +503,13 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
                         case ["fields", "idfield"]: $hodnota_shift = (int)$hodnota + $formFieldsIdShift;
-                                                    $colVals[] = $hodnota_shift;
-                                                    $fieldRow["idfield"]= $hodnota_shift;       // hodnota záznamu do pole formulářových polí
+                                                    $colVals[] = $fieldRow["idfield"] = $hodnota_shift;         // hodnota záznamu do pole formulářových polí
                                                     break;
-                        case ["fields", "title"]:   $colVals[] = $hodnota;
-                                                    $fieldRow["title"]= $hodnota;               // hodnota záznamu do pole formulářových polí
+                        case ["fields", "title"]:   $colVals[] = $fieldRow["title"]= $hodnota;                  // hodnota záznamu do pole formulářových polí
                                                     break;
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                                       // sloupec "name" se nepropisuje do výstupní tabulky "fields"                    
-                        case ["records","idrecord"]:$idRecord  = $hodnota;                      // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
-                                                    $colVals[] = $hodnota;
+                        case ["records","idrecord"]:$idRecord  = $colVals[] = $hodnota;         // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     break;
                         case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
@@ -537,7 +534,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             // ----------------------------------------------------------------------------------------------------------------------------------  
                                                             $idfield = "";
                                                             foreach ($fields as $idfi => $field) {      // v poli $fields dohledám 'idfield' podle známého 'name'
-                                                                if ($field["name"] == $key && substr($idfi,0,1) == $instId) {
+                                                                if ($field["name"] == $key /*&& substr($idfi,0,1) == $instId*/) {
                                                                     $idfield = $idfi; break;
                                                                 }    
                                                             } 
@@ -580,14 +577,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break; 
                         case ["crmFields", "idcrmfield"]:
                                                     $hodnota_shift = (int)$hodnota + $formCrmFieldsIdShift;
-                                                    $colVals[] = $hodnota_shift;
-                                                    $fieldRow["idfield"]= $hodnota_shift;       // hodnota záznamu do pole formulářových polí
+                                                    $colVals[] = $fieldRow["idfield"] = $hodnota_shift; // hodnota záznamu do pole formulářových polí
                                                     break;
-                        case ["crmFields", "title"]:$colVals[] = $hodnota;
-                                                    $fieldRow["title"]= $hodnota;               // hodnota záznamu do pole formulářových polí
+                        case ["crmFields", "title"]:$colVals[] = $fieldRow["title"] = $hodnota;         // hodnota záznamu do pole formulářových polí
                                                     break;
-                        case ["crmFields", "name"]: $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
-                                                    break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                      
+                        case ["crmFields", "name"]: $fieldRow["name"] = $hodnota;                       // název klíče záznamu do pole formulářových polí
+                                                    break;                                              // sloupec "name" se nepropisuje do výstupní tabulky "fields"                      
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                  
                         default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
                     }
@@ -597,6 +592,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
                 // přidání řádku do pole formulářových polí $fields (struktura pole je <idfield> => ["name" => <hodnota>, "title" => <hodnota>] )
                 if ( !(!strlen($fieldRow["name"]) || !strlen($fieldRow["idfield"]) || !strlen($fieldRow["title"])) ) {  // je-li známý název, title i hodnota záznamu do pole form. polí...          
+                        echo "do pole 'fields' přidán záznam (idfield ".$fieldRow["idfield"].", name ".$fieldRow["name"].", title ".$fieldRow["title"].")\n";
                     $fields[$fieldRow["idfield"]]["name"]  = $fieldRow["name"];     // ... provede se přidání prvku <idfield>["name"] => <hodnota> ...
                     $fields[$fieldRow["idfield"]]["title"] = $fieldRow["title"];    // ... a prvku <idfield>["title"] => <hodnota>
                 }    
@@ -608,11 +604,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 }
             }   // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // operace po zpracování dat v celé tabulce
-            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab."\n" : "";       // volitelný diagnostický výstup do logu
+            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." z instance ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
-                                    echo "pole 'fields' instance ".$instId.": "; print_r($fields); echo "\n";
-        echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";       // volitelný diagnostický výstup do logu
+                                    echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
+        echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";                           // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
 
