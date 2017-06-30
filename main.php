@@ -516,12 +516,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
                         case ["records", "form"]:   $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
-                                                    if (!is_array($formArr)) {
-                                                        echo "formArr není pole: ";
-                                                        var_dump($formArr);
-                                                        echo "\n";
-                                                        break;
-                                                    }
+                                                    if (is_null($formArr)) {break;}
                                                     foreach ($formArr as $key => $valArr) {     // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
                                                         if (empty($valArr)) {continue;}         // nevyplněné formulářové pole - neobsahuje žádný prvek
                                                         foreach ($valArr as $val) {             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
