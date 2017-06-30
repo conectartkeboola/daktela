@@ -370,7 +370,7 @@ $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet �
 $tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
 
 while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
-    foreach ($tabsList_InOut[6] as $tab) {
+    foreach ($tabsList_InOut_OutOnly[6] as $tab) {
         $tabItems[$tab] = 0;            // úvodní nastavení nulových hodnot počitadel počtu záznamů všech OUT tabulek
     }
     
@@ -515,8 +515,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
-                        case ["records", "form"]:   foreach (json_decode($hodnota, true, JSON_UNESCAPED_UNICODE) as $key => $valArr) {
-                                                                                                // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)
+                        case ["records", "form"]:   $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
+                                                    if (!is_array($formArr)) {
+                                                        echo "formArr není pole: ";
+                                                        var_dump($formArr);
+                                                        echo "\n";
+                                                        break;
+                                                    }
+                                                    foreach ($formArr as $key => $valArr) {     // $valArr je pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
                                                         if (empty($valArr)) {continue;}         // nevyplněné formulářové pole - neobsahuje žádný prvek
                                                         foreach ($valArr as $val) {             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
                                                             $fieldVals = [];                    // záznam do out-only tabulky 'fieldValues'
