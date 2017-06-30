@@ -609,7 +609,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." z instance ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
-                                    echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
+                                    //echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
         echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";                           // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
