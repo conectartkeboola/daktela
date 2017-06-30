@@ -106,6 +106,10 @@ $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevuj
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
+$tabsOutOnly = [
+    5                   =>  $tabsOutOnlyV56,
+    6                   =>  array_merge($tabsOutOnlyV56, $tabsOutOnlyV6)
+];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // jen vstupní tabulky
 $tabsInOnlyV56 = [];
@@ -126,8 +130,8 @@ $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupní
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // proměnné pro práci se všemi tabulkami
 $tabs_InOut_OutOnly = [      
-    5                   => array_merge($tabsInOut[5], $tabsOutOnly),
-    6                   => array_merge($tabsInOut[6], $tabsOutOnly)
+    5                   => array_merge($tabsInOut[5], $tabsOutOnly[5]),
+    6                   => array_merge($tabsInOut[6], $tabsOutOnly[6])
 ];
 $tabs_InOut_InOnly = [     // nutno dodržet pořadí spojování polí, aby in-only tabulka crmFields (v6) byla před tabulkami závislými na fields !
     5                   => array_merge($tabsInOnly[5], $tabsInOut[5]),
