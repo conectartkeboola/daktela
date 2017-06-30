@@ -129,17 +129,17 @@ $colsInOnly = [         // seznam sloupců, které se nepropíší do výstupní
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // proměnné pro práci se všemi tabulkami
+$tabs_InOut_InOnly = [     // nutno dodržet pořadí spojování polí, aby in-only tabulka crmFields (v6) byla před tabulkami závislými na fields !
+    5                   => array_merge($tabsInOnly[5], $tabsInOut[5]),
+    6                   => array_merge($tabsInOnly[6], $tabsInOut[6])
+];
 $tabs_InOut_OutOnly = [      
     5                   => array_merge($tabsInOut[5], $tabsOutOnly[5]),
     6                   => array_merge($tabsInOut[6], $tabsOutOnly[6])
 ];
-$tabs_InOut_InOnly = [     // nutno dodržet pořadí spojování polí, aby in-only tabulka crmFields (v6) byla před tabulkami závislými na fields !
-    5                   => array_merge($tabsInOnly[5], $tabsInOut[5]),
-    6                   => array_merge($tabsInOnly[6], $tabsInOut[6])
-]; 
-$tabsList_InOut = [
-    5                   => array_keys($tabsInOut[5]),
-    6                   => array_keys($tabsInOut[6])
+$tabsList_InOut_InOnly = [
+    5                   => array_keys($tabs_InOut_InOnly[5]),
+    6                   => array_keys($tabs_InOut_InOnly[6])
 ];
 $tabsList_InOut_OutOnly = [
     5                   => array_keys($tabs_InOut_OutOnly[5]),
@@ -359,7 +359,7 @@ echo $diagOutOptions["basicStatusInfo"] ? "PROMĚNNÉ A FUNKCE ZAVEDENY\n" : "";
 // ==============================================================================================================================================================================================
 // načtení vstupních souborů
 foreach ($instances as $instId => $inst) {
-    foreach ($tabsList_InOut[$inst["ver"]] as $file) {
+    foreach ($tabsList_InOut_InOnly[$inst["ver"]] as $file) {
         ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
     }
 }
@@ -417,7 +417,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
         foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {
             
-            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab." z instance ".$instId."\n" : ""; // volitelný diagnostický výstup do logu
+            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId."\n" : ""; // volitelný diagnostický výstup do logu
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -606,7 +606,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 }
             }   // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // operace po zpracování dat v celé tabulce
-            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." z instance ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
+            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
                                     //echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
