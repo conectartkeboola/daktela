@@ -535,7 +535,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             // ----------------------------------------------------------------------------------------------------------------------------------  
                                                             $idfield = "";
                                                             foreach ($fields as $idfi => $field) {      // v poli $fields dohledám 'idfield' podle známého 'name'
-                                                                if ($field["name"] == $key /*&& substr($idfi,0,1) == $instId*/) {
+                                                                if ($field["name"] == $key) {
                                                                     $idfield = $idfi; break;
                                                                 }    
                                                             } 
@@ -593,9 +593,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
                 // přidání řádku do pole formulářových polí $fields (struktura pole je <idfield> => ["name" => <hodnota>, "title" => <hodnota>] )
                 if ( !(!strlen($fieldRow["name"]) || !strlen($fieldRow["idfield"]) || !strlen($fieldRow["title"])) ) {  // je-li známý název, title i hodnota záznamu do pole form. polí...          
-                        if ($instId == "3" && ($tab == "crmFields" || $tab == "fields")) {
+                        /*if ($instId == "3" && ($tab == "crmFields" || $tab == "fields")) {
                         echo "do pole 'fields' přidán záznam (idfield ".$fieldRow["idfield"].", name ".$fieldRow["name"].", title ".$fieldRow["title"].")\n";
-                        }
+                        } */
                     $fields[$fieldRow["idfield"]]["name"]  = $fieldRow["name"];     // ... provede se přidání prvku <idfield>["name"] => <hodnota> ...
                     $fields[$fieldRow["idfield"]]["title"] = $fieldRow["title"];    // ... a prvku <idfield>["title"] => <hodnota>
                 }    
@@ -610,7 +610,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
-                                    //echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
+                        //echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
         echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";                           // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
