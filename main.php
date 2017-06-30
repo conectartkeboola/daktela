@@ -101,8 +101,8 @@ $tabsOutOnlyV56 = [         // tabulky, které vytváří transformace a objevuj
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
-/*$tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
-    "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
+$tabsOutOnlyV6 = [];          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
+/*    "fieldValues"       =>  ["idfieldvalue" => 1, "idrecord" => 1, "idfield" => 1, "value" => 0],
     "groups"            =>  ["idgroup" => 1, "title" => 0],
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ]; */
