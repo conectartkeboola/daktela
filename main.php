@@ -152,9 +152,9 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ostatní proměnné
 
-// posun v ID formFields oproti ID formCrmFields
-$formCrmFieldsIdShift = 0;
-$formFieldsIdShift    = 10000;
+// posun v ID formCrmFields oproti ID formFields
+$formFieldsIdShift    = 0;
+$formCrmFieldsIdShift = 10000;
 
 // volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
 // 1) nahradí prázdný atribut calls.idcall hodnotou 'n/a';  2) na začátek tabulky 'users' vloží fiktivního "uživatele" s iduser = 'n/a' (kvůli párování v GD
@@ -537,7 +537,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                             // ----------------------------------------------------------------------------------------------------------------------------------  
                                                             $idfield = "";
                                                             foreach ($fields as $idfi => $field) {      // v poli $fields dohledám 'idfield' podle známého 'name'
-                                                                if ($field["name"] == $key && substr($idfi,0,1) == $inst["ver"]) {
+                                                                if ($field["name"] == $key && substr($idfi,0,1) == $instId) {
                                                                     $idfield = $idfi; break;
                                                                 }    
                                                             } 
@@ -611,7 +611,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab."\n" : "";       // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
-                                    echo "pole 'fields' instance ".$inst["ver"].": "; print_r($fields); echo "\n";
+                                    echo "pole 'fields' instance ".$instId.": "; print_r($fields); echo "\n";
         echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";       // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
