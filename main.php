@@ -597,7 +597,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"  
                         case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId    
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
-                        // TABULKY V6 ONLY                            
+                        // TABULKY V6 ONLY
+                        case ["contacts","idcontact"]:$idFormFieldSrcRec = $colVals[]= $hodnota;// uložení hodnoty 'idcontact' pro následné použití v 'contFieldVals'
+                                                    break;
                         case ["contacts", "form"]:  $contactsForm = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     // ------------------------------------------------------------------------------------------------------------------------------------------
                                                     // parsování "number" (veřejného tel. číslo) pro potřeby CRM records reportu
@@ -615,7 +617,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     if (!$parseRes) {continue 8;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "contacts"  
                         case ["contacts","number"]: $colVals[] = $telNum;           // hodnota vytvořená v case ["contacts", "form"]
-                                                    break;                   
+                                                    break;
+                        case ["tickets","idticket"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idticket' pro následné použití v 'tickFieldVals'
+                                                    break;
                         case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);
                                                     break;
                         case ["tickets","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
@@ -625,6 +629,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $parseRes = jsonParse($formArr);
                                                     if (!$parseRes) {continue 8;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "tickets"
+                        case ["crmRecords", "idcrmrecord"]:$idFormFieldSrcRec = $colVals[]= $hodnota;   // uložení hodnoty 'idcrmrecord' pro následné použití v 'crmFieldVals'
+                                                    break;
                         case ["crmRecords", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
