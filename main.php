@@ -400,11 +400,11 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
             // ----------------------------------------------------------------------------------------------------------------------------------
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
-            $formFieldsOuts[$tab]["idFieldVal"]++;                              // inkrement umělého ID hodnot formulářových polí
+        /*    $formFieldsOuts[$tab]["idFieldVal"]++;                              // inkrement umělého ID hodnot formulářových polí
             if (checkIdLengthOverflow($formFieldsOuts[$tab]["idFieldVal"])) {   // došlo k přetečení délky ID určené proměnnou $idFieldValue
                 return false;                                                   // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
             } // --------------------------------------------------------------------------------------------------------------------------------           
-            $idfieldArr = [];   //$idfield = "";
+        */    $idfieldArr = [];   //$idfield = "";
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
                 $instDig       = floor($idfi/pow(10, $idFormat["id"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
                 $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
@@ -431,6 +431,11 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
             foreach ($idfieldArr as $idfield) {
+                // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
+                $formFieldsOuts[$tab]["idFieldVal"]++;                              // inkrement umělého ID hodnot formulářových polí
+                if (checkIdLengthOverflow($formFieldsOuts[$tab]["idFieldVal"])) {   // došlo k přetečení délky ID určené proměnnou $idFieldValue
+                    return false;                                                   // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
+                }
                 $fieldVals = [
                     setIdLength($instId,$formFieldsOuts[$tab]["idFieldVal"],!$commonFieldValues),
                                                                                 // ID cílového záznamu do out-only tabulky hodnot formulářových polí
