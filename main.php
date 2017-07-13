@@ -404,17 +404,17 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             if (checkIdLengthOverflow($formFieldsOuts[$tab]["idFieldVal"])) {   // došlo k přetečení délky ID určené proměnnou $idFieldValue
                 return false;                                                   // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
             } // --------------------------------------------------------------------------------------------------------------------------------           
-            $idfield = "";
+            $idfieldArr = [];   //$idfield = "";
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
                 $instDig       = floor($idfi/pow(10, $idFormat["id"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
                 $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
                 if ($instDig != $instId) {continue;}                            // nejedná se o formulářové pole z aktuálně zpracovávané instance
-                if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
+              /*  if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
-                if ($field["name"] == $key) {
-                    $idfield = $idfi; break;
+              */  if ($field["name"] == $key) {
+                    $idfieldArr[] = $idfi; //$idfield = $idfi; break;
                 }
-            }
+            } /*
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
@@ -426,18 +426,20 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                         $idfield = $idfi; break;
                     }
                 }
-            } // --------------------------------------------------------------------------------------------------------------------------------                                                              
+            }*/ // --------------------------------------------------------------------------------------------------------------------------------                                                              
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
-            $fieldVals = [
-                setIdLength($instId,$formFieldsOuts[$tab]["idFieldVal"],!$commonFieldValues),
+            foreach ($idfieldArr as $idfield) {
+                $fieldVals = [
+                    setIdLength($instId,$formFieldsOuts[$tab]["idFieldVal"],!$commonFieldValues),
                                                                                 // ID cílového záznamu do out-only tabulky hodnot formulářových polí
-                $idFormFieldSrcRec,                                             // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
-                $idfield,                                                       // idfield
-                $val                                                            // korigovaná hodnota formulářového pole
-            ];                                                                                                                                                                     
-            ${"out_".$formFieldsOuts[$tab]["outTab"]} -> writeRow($fieldVals);  // zápis řádku do out-only tabulky hodnot formulářových polí
+                    $idFormFieldSrcRec,                                         // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
+                    $idfield,                                                   // idfield
+                    $val                                                        // korigovaná hodnota formulářového pole
+                ];                                                                                                                                                                     
+                ${"out_".$formFieldsOuts[$tab]["outTab"]}->writeRow($fieldVals);// zápis řádku do out-only tabulky hodnot formulářových polí
+            }
         }    
     }
     return true;                                                                // parsování JSONu proběhlo OK
