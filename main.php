@@ -166,10 +166,6 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ostatní proměnné
 
-// posun v ID formCrmFields oproti ID formFields
-$formFieldsIdShift    = 0;
-$formCrmFieldsIdShift = 10000;
-
 // volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
 // 1) nahradí prázdný atribut calls.idcall hodnotou 'n/a';  2) na začátek tabulky 'users' vloží fiktivního "uživatele" s iduser = 'n/a' (kvůli párování v GD
 // motivace:  pro filtrování v GD je třeba mít vedle reálných iduser k dispozici i 'n/a', které GD interpretuje jako "(empty value)"
@@ -332,6 +328,11 @@ function actionCodeToName ($actCode) {  // atribut "action" typu ENUM - převod 
     global $campRecordsActions;
     return array_key_exists($actCode, $campRecordsActions) ? $campRecordsActions[$actCode] : $actCode;
 }
+function setFieldsShift () {            // posun v ID formCrmFields oproti ID formFields
+    global $formFieldsIdShift, $formCrmFieldsIdShift, $idFormat;
+    $formFieldsIdShift    = 0;
+    $formCrmFieldsIdShift = pow(10, $idFormat["id"] - 1);   // přidá v indexu číslici 1 na první pozici zleva (číslice nejvyššího řádu)
+}
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup, $tabItems;
     $groups             = [];           // 1D-pole skupin - prvek pole má tvar groupName => idgroup
@@ -387,13 +388,12 @@ function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo 
     return false;                           // nedošlo k přetečení (OK)
 }
 function jsonParse ($formArr) {     // formArr je 2D-pole    
-    global $formFieldsOuts, $tab, $fields, $idFormFieldSrcRec;
+    global $formFieldsOuts, $tab, $fields, $idFormFieldSrcRec, $idFormat, $instId;
     global ${"out_".$formFieldsOuts[$tab]["outTab"]};                           // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
         if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
             $fieldVals = [];                                                    // záznam do out-only tabulky 'fieldValues'
-
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
             $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
             $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
@@ -403,19 +403,19 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             $formFieldsOuts[$tab]["idFieldVal"]++;                              // inkrement umělého ID hodnot formulářových polí
             if (checkIdLengthOverflow($formFieldsOuts[$tab]["idFieldVal"])) {   // došlo k přetečení délky ID určené proměnnou $idFieldValue
                 return false;                                                   // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
-            }
-            // ----------------------------------------------------------------------------------------------------------------------------------  
+            } // --------------------------------------------------------------------------------------------------------------------------------           
             $idfield = "";
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
+                $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
+                if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
+                    ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
                     $idfield = $idfi; break;
                 }    
-            } 
-            // ----------------------------------------------------------------------------------------------------------------------------------                                                              
+            } // --------------------------------------------------------------------------------------------------------------------------------                                                              
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
-                                                                                // vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
+                                                                                // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
-
             $fieldVals = [
                 setIdLength($instId,$formFieldsOuts[$tab]["idFieldVal"],!$commonFieldValues),
                                                                                 // ID cílového záznamu do out-only tabulky hodnot formulářových polí
@@ -470,6 +470,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
     // [A] tabulky sestavené ze záznamů více instancí (záznamy ze všech instancí se zapíší do stejných výstupních souborů)
 
+    setFieldsShift();                                       // výpočet konstant posunu indexování formulářových polí
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
     initFieldValues();                                      // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
