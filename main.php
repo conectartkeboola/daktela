@@ -411,7 +411,15 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
                     $idfield = $idfi; break;
-                }    
+                }
+            }   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
+            foreach ($fields as $idfi => $field) {
+                $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
+                if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
+                    ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
+                if ($field["name"] == $key) {
+                    $idfield = $idfi; break;
+                }
             } // --------------------------------------------------------------------------------------------------------------------------------                                                              
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
