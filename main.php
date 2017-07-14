@@ -414,8 +414,9 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 if ($field["name"] == $key) {
                     $idfield = $idfi; break;
                 }
-            } 
+            }
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
+                echo $diagOutOptions["basicStatusInfo"] ? "NENALEZENO PREFEROVANÉ FORM. POLE PRO KLÍČ ".$key." U TABULKY ".$tab."\n" : "";  // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
@@ -615,18 +616,17 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         // TABULKY V6 ONLY
                         case ["contacts","idcontact"]:$idFormFieldSrcRec = $colVals[]= $hodnota;// uložení hodnoty 'idcontact' pro následné použití v 'contFieldVals'
                                                     break;
-                        case ["contacts", "form"]:  $contactsForm = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
+                        case ["contacts", "form"]:  $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     // ------------------------------------------------------------------------------------------------------------------------------------------
                                                     // parsování "number" (veřejného tel. číslo) pro potřeby CRM records reportu
                                                     $telNum = "";
-                                                    if (array_key_exists("number", $contactsForm)) {
-                                                        if (array_key_exists(0, $contactsForm["number"])) {
-                                                            $telNum = phoneNumberCanonic($contactsForm["number"][0]);   // uložení tel. čísla do proměnné $telNum
+                                                    if (array_key_exists("number", $formArr)) {
+                                                        if (array_key_exists(0, $formArr["number"])) {
+                                                            $telNum = phoneNumberCanonic($formArr["number"][0]);    // uložení tel. čísla do proměnné $telNum
                                                         }                           // $contactsForm["number"] ... obecně 1D-pole, kde může být více tel. čísel → beru jen první
                                                     }
                                                     // ------------------------------------------------------------------------------------------------------------------------------------------
                                                     // parsování celého JSONu s hodnotami formulářových polí
-                                                    $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($formArr)) {break;} // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
                                                     $parseRes = jsonParse($formArr);
                                                     if (!$parseRes) {continue 6;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
