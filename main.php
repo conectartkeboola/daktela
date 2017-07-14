@@ -412,11 +412,12 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
+                    echo $diagOutOptions["jsonParseInfo"] ? "TABULKA ".$tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
                     $idfield = $idfi; break;
                 }
             }
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
-                echo $diagOutOptions["basicStatusInfo"] ? "NENALEZENO PREFEROVANÉ FORM. POLE PRO KLÍČ ".$key." U TABULKY ".$tab."\n" : "";  // diag. výstup do logu
+                echo $diagOutOptions["jsonParseInfo"] ? "TABULKA ".$tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> " : "";  // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
@@ -424,6 +425,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                     if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
                     if ($field["name"] == $key) {
+                        echo $diagOutOptions["jsonParseInfo"] ? "ALTERNATIVNÍ FORM. POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
                         $idfield = $idfi; break;
                     }
                 }
