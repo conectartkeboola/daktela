@@ -407,26 +407,26 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             $idfieldArr = [];
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
                 $instDig       = floor($idfi/pow(10, $idFormat["id"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
-            /*    $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
-                if ($instDig != $instId) {continue;}                            // nejedná se o formulářové pole z aktuálně zpracovávané instance
-                if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
+                $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
+                if ($instDig != $instId || $fieldShiftDig == 1) {continue;}     // nejde o form. pole z aktuálně zpracovávané instance nebo jde o CRM pole
+                /*if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
-            */    if ($field["name"] == $key) {
+                */if ($field["name"] == $key) {
                     $idfield = $idfi; break;
                 }
             } 
-            /*if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
+            if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
-                    if ($instDig != $instId) {continue;}                        // nejedná se o formulářové pole z aktuálně zpracovávané instance
-                    if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
+                    if ($instDig != $instId || $fieldShiftDig == 0) {continue;} // nejde o form. pole z aktuálně zpracovávané instance nebo jde o ne-CRM pole
+                    /*if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
-                    if ($field["name"] == $key) {
+                    */if ($field["name"] == $key) {
                         $idfield = $idfi; break;
                     }
                 }
-            } */ // --------------------------------------------------------------------------------------------------------------------------------                                                              
+            } // --------------------------------------------------------------------------------------------------------------------------------                                                              
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
