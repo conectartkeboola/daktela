@@ -604,8 +604,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                
                         case ["records","idrecord"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                                                   echo "idRecord = ".$idFormFieldSrcRec." | ";
                                                     if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
-                                                        echo "ZAHÁJENA ITERACE ZÁZNAMU ".$idFormFieldSrcRec; }  // volitelný diag. výstup do logu
+                                                        echo "START ITERACE ZÁZNAMU ".$idFormFieldSrcRec."\n";} // volitelný diag. výstup do logu
                                                     }
                                                     break;
                         case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
