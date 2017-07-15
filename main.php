@@ -12,7 +12,7 @@ $configFile = $dataDir."config.json";
 $config     = json_decode(file_get_contents($configFile), true);
 
 // parametry importované z konfiguračního JSON v KBC
-$callsIncrementalOutput = $config['parameters']['callsIncrementalOutput'];
+$callsIncrementalOutput = $config["parameters"]["callsIncrementalOutput"];
 $diagOutOptions         = $config["parameters"]["diagOutOptions"];          // diag. výstup do logu Jobs v KBC - klíče: basicStatusInfo, jsonParseInfo
 $adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFormFieldSrcRec
 
@@ -443,7 +443,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             ];                                                                                                                                                                     
             ${"out_".$formFieldsOuts[$tab]["outTab"]} -> writeRow($fieldVals);  // zápis řádku do out-only tabulky hodnot formulářových polí
             if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
-                echo $tab." - ADHOC DUMP (\$key = ".$key."): [idVal =".$fieldVals[0].", idSrcRec = ".$fieldVals[1].", idfield = ".$fieldVals[2].", val = ".$fieldVals[3]."]\n";}}
+                echo $tab." - ADHOC DUMP (\$key = ".$key."): [idVal ".$fieldVals[0].", idSrcRec ".$fieldVals[1].", idfield ".$fieldVals[2].", val ".$fieldVals[3]."]\n";}}
         }    
     }
     return true;                                                                // parsování JSONu proběhlo OK
@@ -603,6 +603,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                
                         case ["records","idrecord"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
+                                                    if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
+                                                        echo "ZAHÁJENA ITERACE ZÁZNAMU ".$idFormFieldSrcRec; }  // volitelný diag. výstup do logu
+                                                    }
                                                     break;
                         case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
