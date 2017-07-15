@@ -443,7 +443,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             ];                                                                                                                                                                     
             ${"out_".$formFieldsOuts[$tab]["outTab"]} -> writeRow($fieldVals);  // zápis řádku do out-only tabulky hodnot formulářových polí
             if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
-                echo $tab." - ADHOC DUMP: [idVal =".$fieldVals[0].", idSrcRec = ".$fieldVals[1].", idfield = ".$fieldVals[2].", val = ".$fieldVals[3]."]\n";}}
+                echo $tab." - ADHOC DUMP (\$key = ".$key."): [idVal =".$fieldVals[0].", idSrcRec = ".$fieldVals[1].", idfield = ".$fieldVals[2].", val = ".$fieldVals[3]."]\n";}}
         }    
     }
     return true;                                                                // parsování JSONu proběhlo OK
