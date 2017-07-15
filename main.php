@@ -13,13 +13,14 @@ $config     = json_decode(file_get_contents($configFile), true);
 
 // parametry importované z konfiguračního JSON v KBC
 $callsIncrementalOutput = $config['parameters']['callsIncrementalOutput'];
-$diagOutOptions         = $config['parameters']['diagOutOptions'];
+$diagOutOptions         = $config["parameters"]["diagOutOptions"];          // diag. výstup do logu Jobs v KBC - klíče: basicStatusInfo, jsonParseInfo
+$adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFormFieldSrcRec
 
 // full load / incremental load výstupní tabulky 'calls'
 $incrementalOn = !empty($callsIncrementalOutput['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
 
 // za jak dlouhou historii [dny] se generuje inkrementální výstup (0 = jen za aktuální den, 1 = od včerejšího dne včetně [default], ...)
-$jsonHistDays = $callsIncrementalOutput['incremHistDays'];
+$jsonHistDays   = $callsIncrementalOutput['incremHistDays'];
 $incremHistDays = $incrementalOn && !empty($jsonHistDays) && is_numeric($jsonHistDays) ? $jsonHistDays : 1;
 
 /* import parametru z JSON řetězce v definici Customer Science PHP v KBC:
@@ -388,7 +389,7 @@ function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo 
     return false;                           // nedošlo k přetečení (OK)
 }
 function jsonParse ($formArr) {     // formArr je 2D-pole    
-    global $formFieldsOuts, $tab, $fields, $idFormFieldSrcRec, $idFormat, $instId, $diagOutOptions;
+    global $formFieldsOuts, $tab, $fields, $idFormFieldSrcRec, $idFormat, $instId, $diagOutOptions, $adhocDump;
     global ${"out_".$formFieldsOuts[$tab]["outTab"]};                           // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
         if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
@@ -412,12 +413,12 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
-                    echo $diagOutOptions["jsonParseInfo"] ? "TABULKA ".$tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
+                    echo $diagOutOptions["jsonParseInfo"] ? $tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
                     $idfield = $idfi; break;
                 }
             }
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
-                echo $diagOutOptions["jsonParseInfo"] ? "TABULKA ".$tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> " : "";  // diag. výstup do logu
+                echo $diagOutOptions["jsonParseInfo"] ? $tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> " : "";  // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
@@ -425,7 +426,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                     if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
                     if ($field["name"] == $key) {
-                        echo $diagOutOptions["jsonParseInfo"] ? "ALTERNATIVNÍ FORM. POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
+                        echo $diagOutOptions["jsonParseInfo"] ? "ALTERNATIVNÍ POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
                         $idfield = $idfi; break;
                     }
                 }
@@ -441,6 +442,8 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 $val                                                            // korigovaná hodnota formulářového pole
             ];                                                                                                                                                                     
             ${"out_".$formFieldsOuts[$tab]["outTab"]} -> writeRow($fieldVals);  // zápis řádku do out-only tabulky hodnot formulářových polí
+            if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
+                echo "ADHOC DUMP: \$fieldVals = [".$fieldVals[0].", ".$fieldVals[1].", ".$fieldVals[2].", ".$fieldVals[3]."]\n";}}
         }    
     }
     return true;                                                                // parsování JSONu proběhlo OK
@@ -518,8 +521,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     continue 4;                                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                 }
                 
-                $colVals   = [];                                                    // řádek výstupní tabulky
-                $fieldRow  = [];                                                    // záznam do pole formulářových polí           
+                $colVals = $fieldRow  = [];                                         // řádek výstupní tabulky | záznam do pole formulářových polí     
                 unset($idFormFieldSrcRec);                                          // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí
                 $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
                 foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku) [= iterace sloupců]
