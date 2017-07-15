@@ -15,7 +15,8 @@ $config     = json_decode(file_get_contents($configFile), true);
 $callsIncrementalOutput = $config["parameters"]["callsIncrementalOutput"];
 $diagOutOptions         = $config["parameters"]["diagOutOptions"];          // diag. výstup do logu Jobs v KBC - klíče: basicStatusInfo, jsonParseInfo
 $adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFormFieldSrcRec
-
+    echo "adhocDump['active'] = ".$adhocDump["active"]."\n";
+    echo "adhocDump['idFormFieldSrcRec'] = ".$adhocDump["idFormFieldSrcRec"]."\n";
 // full load / incremental load výstupní tabulky 'calls'
 $incrementalOn = !empty($callsIncrementalOutput['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
 
