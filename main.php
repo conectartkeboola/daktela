@@ -15,8 +15,7 @@ $config     = json_decode(file_get_contents($configFile), true);
 $callsIncrementalOutput = $config["parameters"]["callsIncrementalOutput"];
 $diagOutOptions         = $config["parameters"]["diagOutOptions"];          // diag. výstup do logu Jobs v KBC - klíče: basicStatusInfo, jsonParseInfo
 $adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFormFieldSrcRec
-    echo "adhocDump['active'] = ".$adhocDump["active"]."\n";
-    echo "adhocDump['idFormFieldSrcRec'] = ".$adhocDump["idFormFieldSrcRec"]."\n";
+
 // full load / incremental load výstupní tabulky 'calls'
 $incrementalOn = !empty($callsIncrementalOutput['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
 
@@ -604,7 +603,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                
                         case ["records","idrecord"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
-                                                   echo "idRecord = ".$idFormFieldSrcRec." | ";
                                                     if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
                                                         echo "START ITERACE ZÁZNAMU ".$idFormFieldSrcRec."\n";} // volitelný diag. výstup do logu
                                                     }
