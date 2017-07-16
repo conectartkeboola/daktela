@@ -14,7 +14,7 @@ $config     = json_decode(file_get_contents($configFile), true);
 // parametry importované z konfiguračního JSON v KBC
 $callsIncrementalOutput = $config["parameters"]["callsIncrementalOutput"];
 $diagOutOptions         = $config["parameters"]["diagOutOptions"];          // diag. výstup do logu Jobs v KBC - klíče: basicStatusInfo, jsonParseInfo
-$adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFormFieldSrcRec
+$adhocDump              = $config["parameters"]["adhocDump"];               // diag. výstup do logu Jobs v KBC - klíče: active, idFieldSrcRec
 
 // full load / incremental load výstupní tabulky 'calls'
 $incrementalOn = !empty($callsIncrementalOutput['incrementalOn']) ? true : false;   // vstupní hodnota false se vyhodnotí jako empty :)
@@ -115,11 +115,11 @@ $tabsOutOnly = [
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // parametry parsování JSON řetězců záznamů z formulářových polí do out-only tabulek hodnot formulářových polí
 $formFieldsOuts = [     // <vstupní tabulka kde se nachází form. pole> => [<název out-only tabulky hodnot form. polí>, <umělý inkrementální index hodnot form. polí>]
-    "records"       =>  ["outTab" => "fieldValues",   "idFieldVal" => 0],
-    "contacts"      =>  ["outTab" => "contFieldVals", "idFieldVal" => 0],
-    "tickets"       =>  ["outTab" => "tickFieldVals", "idFieldVal" => 0],
-    "crmRecords"    =>  ["outTab" => "crmFieldVals",  "idFieldVal" => 0],
-    //"activities"  =>  ["outTab" => "actItemVals",   "idFieldVal" => 0]
+    "records"       =>  "fieldValues",
+    "contacts"      =>  "contFieldVals",
+    "tickets"       =>  "tickFieldVals",
+    "crmRecords"    =>  "crmFieldVals",
+    //"activities"  =>  "actItemVals"
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // jen vstupní tabulky
@@ -174,11 +174,12 @@ $emptyToNA = true;
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
-    "separator" =>  "",                                     // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
+    "sep"       =>  "",                                     // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
     "instId"    =>  ceil(log10(max(2, count($instances)))), // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
-    "id"        =>  8                                       // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
+    "idTab"     =>  8,                                       // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
                                                             // příznakem potvrzujícím, že hodnota dostačovala k indexaci záznamů u všech tabulek, je proměnná $idFormatIdEnoughDigits;
                                                             // nedoplňovat = "" / 0 / NULL / []  (~ hodnota, kterou lze vyhodnotit jako empty)    
+    "idField"   =>  3                                       // výchozí počet číslic, na které je doplňováno inkrementální ID hodnot konkrétního form. pole
 ];
 
 // delimitery názvu skupiny v queues.idgroup
@@ -212,14 +213,15 @@ $keywords = [
 ];
 // ==============================================================================================================================================================================================
 // funkce
-
-function setIdLength ($instId =0,$str,$useInstPref =true) { // prefixování hodnoty atributu identifikátorem instance + nastavení požadované délky num. řetězců
+                                                            // prefixování hodnoty atributu identifikátorem instance + nastavení požadované délky num. řetězců
+function setIdLength ($instId = 0, $str, $useInstPref = true, $objType = "tab") { 
     global $idFormat;
+    $len = $objType=="tab" ? $idFormat["idTab"] : $idFormat["idField"]; // jde o ID položky tabuky / ID form. pole (objType = tab / fielf)
     switch (!strlen($str)) {
         case true:  return "";                              // vstupní hodnota je řetězec nulové délky
-        case false: $idFormated = !empty($idFormat["id"]) ? sprintf('%0'.$idFormat["id"].'s', $str) : $str;
+        case false: $idFormated = !empty($len) ? sprintf('%0'.$len.'s', $str) : $str;
                     switch ($useInstPref) {                 // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
-                        case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["separator"] . $idFormated;
+                        case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["sep"] . $idFormated;
                         case false: return $idFormated;    
                     }   
     }
@@ -332,7 +334,7 @@ function actionCodeToName ($actCode) {  // atribut "action" typu ENUM - převod 
 function setFieldsShift () {            // posun v ID formCrmFields oproti ID formFields
     global $formFieldsIdShift, $formCrmFieldsIdShift, $idFormat;
     $formFieldsIdShift    = 0;
-    $formCrmFieldsIdShift = pow(10, $idFormat["id"] - 1);   // přidá v indexu číslici 1 na první pozici zleva (číslice nejvyššího řádu)
+    $formCrmFieldsIdShift = pow(10, $idFormat["idTab"] - 1);   // přidá v indexu číslici 1 na první pozici zleva (číslice nejvyššího řádu)
 }
 function initGroups () {                // nastavení výchozích hodnot proměnných popisujících skupiny
     global $groups, $idGroup, $tabItems;
@@ -354,12 +356,6 @@ function initFields () {                // nastavení výchozích hodnot proměn
     global $fields;
     $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]    
 }
-function initFieldValues () {
-    global $formFieldsOuts;
-    foreach ($formFieldsOuts as $outOnlyTabAttr) {
-        $outOnlyTabAttr["idFieldVal"]=0;// umělý inkrementální index pro číslování hodnot formulářových polí z dané tabulky
-    }
-}
 function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-pole stavů $statuses
     global $statuses;                   // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
     foreach ($statuses as $statId => $statRow) {
@@ -379,20 +375,21 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
     }
     return false;                   // zadaná hodnota v poli $statuses nenalezena
 }
-function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["id"] ...
+function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["idTab"] ...
     global $idFormat, $tab, $diagOutOptions;// ... nebo umělým ID (groups, statuses, fieldValues)
-        if ($val > pow(10, $idFormat["id"])) {
-            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU V TABULCE ".$tab."\n" : "";   // volitelný diagnostický výstup do logu
-            $idFormat["id"]++;
+        if ($val > pow(10, $idFormat["idTab"])) {
+            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU ZÁZNAMŮ V TABULCE ".$tab."\n" : "";   // volitelný diagnostický výstup do logu
+            $idFormat["idTab"]++;
             return true;                    // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
         }
     return false;                           // nedošlo k přetečení (OK)
 }
 function jsonParse ($formArr) {     // formArr je 2D-pole    
-    global $formFieldsOuts, $tab, $fields, $idFormFieldSrcRec, $idFormat, $instId, $diagOutOptions, $adhocDump;
-    global ${"out_".$formFieldsOuts[$tab]["outTab"]};                           // název out-only tabulky pro zápis hodnot formulářových polí
+    global $formFieldsOuts, $tab, $fields, $idFieldSrcRec, $idFormat, $instId, $diagOutOptions, $adhocDump;
+    global ${"out_".$formFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
         if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
+        $idVal = 0;                                                             // ID hodnoty konkrétního form. pole
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
             $fieldVals = [];                                                    // záznam do out-only tabulky 'fieldValues'
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
@@ -400,15 +397,17 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
             // ----------------------------------------------------------------------------------------------------------------------------------
-            // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
-            $formFieldsOuts[$tab]["idFieldVal"]++;                              // inkrement umělého ID hodnot formulářových polí
-            if (checkIdLengthOverflow($formFieldsOuts[$tab]["idFieldVal"])) {   // došlo k přetečení délky ID určené proměnnou $idFieldValue
-                return false;                                                   // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
-            } // --------------------------------------------------------------------------------------------------------------------------------           
+            // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
+            $idVal++;                                                           // inkrement umělého ID hodnot formulářových polí
+            if ($idVal = pow(10, $idFormat["idField"])) {                       // došlo k přetečení délky indexů hodnot form. polí
+            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU HODNOT FORM. POLÍ V TABULCE ".$tab."\n" : ""; // volitelný diagnostický výstup do logu
+            $idFormat["idField"]++;            
+            }   // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
+            // ----------------------------------------------------------------------------------------------------------------------------------         
             $idfield = "";
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
-                $instDig       = floor($idfi/pow(10, $idFormat["id"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
-                $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
+                $instDig       = floor($idfi/pow(10, $idFormat["idTab"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
+                $fieldShiftDig = floor($idfi/pow(10, $idFormat["idTab"]-1)) - 10* $instId;  // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
                 if ($instDig != $instId) {continue;}                            // nejedná se o formulářové pole z aktuálně zpracovávané instance
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
@@ -420,8 +419,8 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
                 echo $diagOutOptions["jsonParseInfo"] ? $tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> " : "";  // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
-                    $instDig       = floor($idfi/pow(10, $idFormat["id"]));     // číslice vyjadřující ID aktuálně zpracovávané instance
-                    $fieldShiftDig = floor($idfi/pow(10, $idFormat["id"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
+                    $instDig       = floor($idfi/pow(10, $idFormat["idTab"]));  // číslice vyjadřující ID aktuálně zpracovávané instance
+                    $fieldShiftDig = floor($idfi/pow(10, $idFormat["idTab"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
                     if ($instDig != $instId) {continue;}                        // nejedná se o formulářové pole z aktuálně zpracovávané instance
                     if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
@@ -435,18 +434,16 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
             $fieldVals = [
-                setIdLength($instId,$formFieldsOuts[$tab]["idFieldVal"],!$commonFieldValues),
-                                                                                // ID cílového záznamu do out-only tabulky hodnot formulářových polí
-                $idFormFieldSrcRec,                                             // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
+                $idFieldSrcRec.$idfield.setIdLength("",$idVal,false,"field"),   // ID cílového záznamu do out-only tabulky hodnot formulářových polí
+                $idFieldSrcRec,                                                 // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
                 $idfield,                                                       // idfield
                 $val                                                            // korigovaná hodnota formulářového pole
             ];                                                                                                                                                                     
-            ${"out_".$formFieldsOuts[$tab]["outTab"]} -> writeRow($fieldVals);  // zápis řádku do out-only tabulky hodnot formulářových polí
-            if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
+            ${"out_".$formFieldsOuts[$tab]} -> writeRow($fieldVals);            // zápis řádku do out-only tabulky hodnot formulářových polí
+            if ($adhocDump["active"]) {if ($adhocDump["idFieldSrcRec"] == $idFieldSrcRec) {
                 echo $tab." - ADHOC DUMP (\$key = ".$key."): [idVal ".$fieldVals[0].", idSrcRec ".$fieldVals[1].", idfield ".$fieldVals[2].", val ".$fieldVals[3]."]\n";}}
         }    
     }
-    return true;                                                                // parsování JSONu proběhlo OK
 }
 echo $diagOutOptions["basicStatusInfo"] ? "PROMĚNNÉ A FUNKCE ZAVEDENY\n" : "";  // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
@@ -459,10 +456,10 @@ foreach ($instances as $instId => $inst) {
 echo $diagOutOptions["basicStatusInfo"] ? "VSTUPNÍ SOUBORY NAČTENY\n" : "";     // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
 echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ DAT\n" : "";     // volitelný diagnostický výstup do logu
-$idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek (false = počáteční hodnota)
-$tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["id"])
+$idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["idTab"] dostačoval k indexaci záznamů u všech tabulek (false = počáteční hodnota)
+$tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["idTab"])
 
-while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
+while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet číslic určený proměnnou $idFormat["idTab"] dostačoval k indexaci záznamů u všech tabulek
     foreach ($tabsList_InOut_OutOnly[6] as $tab) {
         $tabItems[$tab] = 0;            // úvodní nastavení nulových hodnot počitadel počtu záznamů všech OUT tabulek
     }
@@ -493,7 +490,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     setFieldsShift();                                       // výpočet konstant posunu indexování formulářových polí
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
-    initFieldValues();                                      // nastavení výchozích hodnot proměnných popisujících hodnoty formulářových polí
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
@@ -517,12 +513,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
                 
                 $tabItems[$tab]++;                                                  // inkrement počitadla záznamů v tabulce
-                if (checkIdLengthOverflow($tabItems[$tab])) {                       // došlo k přetečení délky ID určené proměnnou $idFormat["id"]
+                if (checkIdLengthOverflow($tabItems[$tab])) {                       // došlo k přetečení délky ID určené proměnnou $idFormat["idTab"]
                     continue 4;                                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                 }
                 
                 $colVals = $fieldRow  = [];                                         // řádek výstupní tabulky | záznam do pole formulářových polí     
-                unset($idFormFieldSrcRec);                                          // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí
+                unset($idFieldSrcRec);                                              // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí
                 $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
                 foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku) [= iterace sloupců]
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -602,10 +598,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["fields", "name"]:    $fieldRow["name"] = $hodnota;               // název klíče záznamu do pole formulářových polí
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                
-                        case ["records","idrecord"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
-                                                    if ($adhocDump["active"]) {if ($adhocDump["idFormFieldSrcRec"] == $idFormFieldSrcRec) {
-                                                        echo "START ITERACE ZÁZNAMU ".$idFormFieldSrcRec."\n";} // volitelný diag. výstup do logu
-                                                    }
+                        case ["records","idrecord"]:$idFieldSrcRec = $colVals[] = $hodnota;     // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     break;
                         case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
@@ -615,13 +608,12 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;                                               
                         case ["records", "form"]:   $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($formArr)) {break;} // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    $parseRes = jsonParse($formArr);
-                                                    if (!$parseRes) {continue 6;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
+                                                    jsonParse($formArr);                                         
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "records"  
                         case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId    
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
                         // TABULKY V6 ONLY
-                        case ["contacts","idcontact"]:$idFormFieldSrcRec = $colVals[]= $hodnota;// uložení hodnoty 'idcontact' pro následné použití v 'contFieldVals'
+                        case ["contacts","idcontact"]:$idFieldSrcRec = $colVals[]= $hodnota;// uložení hodnoty 'idcontact' pro následné použití v 'contFieldVals'
                                                     break;
                         case ["contacts", "form"]:  $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -635,12 +627,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     // ------------------------------------------------------------------------------------------------------------------------------------------
                                                     // parsování celého JSONu s hodnotami formulářových polí
                                                     if (is_null($formArr)) {break;} // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    $parseRes = jsonParse($formArr);
-                                                    if (!$parseRes) {continue 6;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
+                                                    jsonParse($formArr);
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "contacts"  
                         case ["contacts","number"]: $colVals[] = $telNum;           // hodnota vytvořená v case ["contacts", "form"]
                                                     break;
-                        case ["tickets","idticket"]:$idFormFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idticket' pro následné použití v 'tickFieldVals'
+                        case ["tickets","idticket"]:$idFieldSrcRec = $colVals[] = $hodnota; // uložení hodnoty 'idticket' pro následné použití v 'tickFieldVals'
                                                     break;
                         case ["tickets", "email"]:  $colVals[] = convertMail($hodnota);
                                                     break;
@@ -648,18 +639,16 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["tickets", "form"]:   $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($formArr)) {break;} // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    $parseRes = jsonParse($formArr);
-                                                    if (!$parseRes) {continue 6;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
+                                                    jsonParse($formArr);
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "tickets"
-                        case ["crmRecords", "idcrmrecord"]:$idFormFieldSrcRec = $colVals[]= $hodnota;   // uložení hodnoty 'idcrmrecord' pro následné použití v 'crmFieldVals'
+                        case ["crmRecords", "idcrmrecord"]:$idFieldSrcRec = $colVals[]= $hodnota;   // uložení hodnoty 'idcrmrecord' pro následné použití v 'crmFieldVals'
                                                     break;
                         case ["crmRecords", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
                         case ["crmRecords", "form"]:$formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($formArr)) {break;} // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    $parseRes = jsonParse($formArr);
-                                                    if (!$parseRes) {continue 6;}   // došlo k přetečení délky ID určené proměnnou $idFieldValue → zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)                                           
+                                                    jsonParse($formArr);
                                                     break;                          // sloupec "form" se nepropisuje do výstupní tabulky "crmRecords"
                         case ["crmRecordSnapshots", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
@@ -716,7 +705,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         $out_arrStat -> writeRow($colStatusesVals);
     }
     
-    $idFormatIdEnoughDigits = true;         // potvrzení, že počet číslic určený proměnnou $idFormat["id"] dostačoval k indexaci záznamů u všech tabulek
+    $idFormatIdEnoughDigits = true;         // potvrzení, že počet číslic určený proměnnou $idFormat["idTab"] dostačoval k indexaci záznamů u všech tabulek
 }
 // ==============================================================================================================================================================================================
 // [B] tabulky společné pro všechny instance (nesestavené ze záznamů více instancí)
