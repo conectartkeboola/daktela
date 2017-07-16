@@ -399,7 +399,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             // ----------------------------------------------------------------------------------------------------------------------------------
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
             $idVal++;                                                           // inkrement umělého ID hodnot formulářových polí
-            if ($idVal = pow(10, $idFormat["idField"])) {                       // došlo k přetečení délky indexů hodnot form. polí
+            if ($idVal == pow(10, $idFormat["idField"])) {                      // došlo k přetečení délky indexů hodnot form. polí
             echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU HODNOT FORM. POLÍ V TABULCE ".$tab."\n" : ""; // volitelný diagnostický výstup do logu
             $idFormat["idField"]++;            
             }   // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
@@ -434,7 +434,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
             $fieldVals = [
-                $idFieldSrcRec.$idfield.setIdLength("",$idVal,false,"field"),   // ID cílového záznamu do out-only tabulky hodnot formulářových polí
+                $idFieldSrcRec . $idfield . setIdLength(0,$idVal,false,"field"),// ID cílového záznamu do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec,                                                 // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
                 $idfield,                                                       // idfield
                 $val                                                            // korigovaná hodnota formulářového pole
