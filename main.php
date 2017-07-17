@@ -47,6 +47,12 @@ $instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
 // struktura tabulek
 
 // vstupně-výstupní tabulky (načtou se jako vstupy, transformují se a výsledek je zapsán jako výstup)
+$tabsInOutV5  = [
+    "calls"             =>  ["idcall" => 1, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
+                             "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
+                             "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
+                             "missed_call_time" => 0, "score" => 0, "note" => 0, "attemps" => 0, "qa_user_id" => 0, "idinstance" => 0]
+];
 $tabsInOutV56 = [            
  // "název_tabulky"     =>  ["název_sloupce" => 0/1 ~ neprefixovat/prefixovat hodnoty ve sloupci identifikátorem instance]    
     "loginSessions"     =>  ["idloginsession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
@@ -55,10 +61,6 @@ $tabsInOutV56 = [
     "users"             =>  ["iduser" => 1, "title" => 0, "idinstance" => 0, "email" => 0],
     "pauses"            =>  ["idpause" => 1, "title" => 0, "idinstance" => 0, "type" => 0, "paid" => 0],
     "queues"            =>  ["idqueue" => 1, "title" => 0, "idinstance" => 0, "idgroup" => 0],  // 'idgroup' je v IN tabulce NÁZEV → neprefixovat
-    "calls"             =>  ["idcall" => 1, "call" => 0, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
-                             "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
-                             "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
-                             "missed_call_time" => 0, "score" => 0, "note" => 0, "attemps" => 0, "qa_user_id" => 0, "idinstance" => 0],
     "statuses"          =>  ["idstatus" => 1, "title" => 0],    
     "recordSnapshots"   =>  ["idrecordsnapshot"=> 1, "iduser"=> 1, "idrecord"=> 1, "idstatus"=> 1, "idcall"=> 1, "created"=> 0, "created_by"=> 1, "nextcall" => 0],
     "fields"            =>  ["idfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0],    
@@ -92,7 +94,7 @@ $tabsInOutV6 = [            // vstupně-výstupní tabulky používané pouze u 
                              "time_close" => 0, "created_by" => 1, "idinstance" => 0, "item" => 0]       
 ];
 $tabsInOut = [
-    5                   =>  $tabsInOutV56,
+    5                   =>  array_merge($tabsInOutV5, $tabsInOutV56),
     6                   =>  array_merge($tabsInOutV56, $tabsInOutV6)
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -103,6 +105,10 @@ $tabsOutOnlyV56 = [         // tabulky, které vytváří transformace a objevuj
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
 $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
+    "calls"             =>  ["idcall" => 1, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
+                             "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
+                             "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
+                             "missed_call_time" => 0, "score" => 0, "note" => 0, "attemps" => 0, "qa_user_id" => 0, "idinstance" => 0],
     "contFieldVals"     =>  ["idcontfieldval" => 1, "idcontact"  => 1, "idfield" => 1, "value" => 0],   // hodnoty formulářových polí z tabulky "contacts"
     "tickFieldVals"     =>  ["idtickfieldval" => 1, "idticket"   => 1, "idfield" => 1, "value" => 0],   // hodnoty formulářových polí z tabulky "tickets"
     "crmFieldVals"      =>  ["idcrmfieldval"  => 1, "idcrmrecord"=> 1, "idfield" => 1, "value" => 0],   // hodnoty formulářových polí z tabulky "crmRecords"
@@ -123,12 +129,12 @@ $formFieldsOuts = [     // <vstupní tabulka kde se nachází form. pole> => [<n
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // jen vstupní tabulky
-$tabsInOnlyV56 = [];
+$tabsInOnlyV5  = $tabsInOnlyV56 = [];
 $tabsInOnlyV6  = [
     "crmFields"         =>  ["idcrmfield" => 1, "title" => 0, "idinstance"  => 0, "name" => 0]
 ];
 $tabsInOnly = [
-    5                   =>  $tabsInOnlyV56,
+    5                   =>  array_merge($tabsInOnlyV5, $tabsInOnlyV56),
     6                   =>  array_merge($tabsInOnlyV56, $tabsInOnlyV6)
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -653,10 +659,50 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["crmRecordSnapshots", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
+                        case ["activities", "idqueue"]:
+                                                    $colVals[]= $idqueue= $hodnota; // $idqueue ... pro použití v case ["activities", "item"]
+                                                    break;
+                        case ["activities", "iduser"]:
+                                                    $colVals[]= $iduser = $hodnota; // $iduser  ... pro použití v case ["activities", "item"]
+                                                    break;
                         case ["activities", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
-                        case ["activities", "item"]:$colVals[] = $hodnota;          // obecně objekt (JSON), zatím propisováno do OUT bucketu bez parsování (potřebuji 'duration' v performance reportu)
+                        case ["activities", "type"]:$colVals[]= $type = $hodnota;   // $type ... pro použití v case ["activities", "item"]
+                                                    break;                        
+                        case ["activities", "item"]:$colVals[] = $hodnota;          // obecně objekt (JSON), propisováno do OUT bucketu i bez parsování (potřebuji 'duration' v performance reportu)
+                                                    if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
+                                                    $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
+                                                    if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
+                                                    $callsVals = [  $item["id_call"],
+                                                                    $item["call_time"],
+                                                                    $item["direction"],
+                                                                    $item["answered"],
+                                                                    $idqueue,
+                                                                    $iduser,
+                                                                    $item["clid"],
+                                                                    $item["contact"]["_sys"]["id"],
+                                                                    $item["did"],
+                                                                    $item["wait_time"],
+                                                                    $item["ringing_time"],
+                                                                    $item["hold_time"],
+                                                                    $item["duration"],
+                                                                    $item["orig_pos"],
+                                                                    $item["position"],
+                                                                    $item["disposition_cause"],
+                                                                    $item["disconnection_cause"],
+                                                                    $item["pressed_key"],
+                                                                    $item["missed_call"],
+                                                                    $item["missed_call_time"],
+                                                                    $item["score"],
+                                                                    $item["note"],
+                                                                    $item["attemps"],
+                                                                    $item["qa_user_id"],
+                                                                    $instId
+                                                    ];
+                                                    if (!empty($callsVals)) {                           // je sestaveno pole pro zápis do řádku výstupní tabulky 'calls'
+                                                        $out_calls -> writeRow($callsVals);             // zápis sestaveného řádku do výstupní tabulky 'calls'
+                                                    }
                                                     break; 
                         case ["crmFields", "idcrmfield"]:
                                                     $hodnota_shift = (int)$hodnota + $formCrmFieldsIdShift;
