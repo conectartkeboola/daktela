@@ -182,7 +182,7 @@ $emptyToNA = true;
 $idFormat = [
     "sep"       =>  "",                                     // znak oddělující ID instance od inkrementálního ID dané tabulky ("", "-" apod.)
     "instId"    =>  ceil(log10(max(2, count($instances)))), // počet číslic, na které je doplňováno ID instance (hodnota před oddělovačem) - určuje se dle počtu instancí
-    "idTab"     =>  8,                                       // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
+    "idTab"     =>  8,                                      // výchozí počet číslic, na které je doplňováno inkrementální ID dané tabulky (hodnota za oddělovačem);
                                                             // příznakem potvrzujícím, že hodnota dostačovala k indexaci záznamů u všech tabulek, je proměnná $idFormatIdEnoughDigits;
                                                             // nedoplňovat = "" / 0 / NULL / []  (~ hodnota, kterou lze vyhodnotit jako empty)    
     "idField"   =>  3                                       // výchozí počet číslic, na které je doplňováno inkrementální ID hodnot konkrétního form. pole
@@ -381,6 +381,14 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
     }
     return false;                   // zadaná hodnota v poli $statuses nenalezena
 }
+function callTimeRngCheck ($val) {
+    global $incrementalOn, $incremHistDays; 
+    if ($incrementalOn &&           // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory novější než...) ...
+        substr($val, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... pak je-li daný hovor starší než... ($val je datumočas) ...   
+            return false;
+    }        
+    return true;
+}
 function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["idTab"] ...
     global $idFormat, $tab, $diagOutOptions;// ... nebo umělým ID (groups, statuses, fieldValues)
         if ($val > pow(10, $idFormat["idTab"])) {
@@ -485,8 +493,10 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     //
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
-        $userNA = ["n/a", "(empty value)", "", ""];         // hodnoty [iduser, title, idinstance, email]
-        $out_users -> writeRow($userNA);
+        $userNA   = ["n/a", "(empty value)", "", ""];       // hodnoty [iduser, title, idinstance, email]
+        $statusNA = ["n/a", "(empty value)"];               // hodnoty [idstatus, title]
+        $out_users    -> writeRow($userNA);
+        $out_statuses -> writeRow($statusNA);
     }
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
@@ -554,13 +564,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }                                                
                                                     $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
                                                     break;
-                        case ["calls", "call_time"]:if ($incrementalOn &&                                       // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory za minulý den)...
-                                                        substr($hodnota, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... a není-li daný hovor z minulého dne ($hodnota je datumočas) ...   
-                                                            continue 3;
-                                                        } else {                                                
-                                                            $colVals[] = $hodnota;                              // ... call_time použijeme a normálně pokračujeme v konstrukci řádku...
-                                                        }                                                       
-                                                    break;
+                        case ["calls", "call_time"]:if (!callTimeRngCheck($hodnota)) {                          // 'call_time' není z požadovaného rozsahu -> ...
+                                                        continue 3;                                             // ... řádek z tabulky 'calls' přeskočíme
+                                                    } else {                                                    // 'call_time' je z požadovaného rozsahu -> ...
+                                                        $colVals[] = $hodnota; break;                           // ... 'call_time' použijeme a normálně pokračujeme v konstrukci řádku...
+                                                    }
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
                         case ["calls", "iduser"]:   $colVals[] = $emptyToNA && empty($hodnota) ? "n/a":$hodnota;// prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]                       
@@ -606,7 +614,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;                                      // sloupec "name" se nepropisuje do výstupní tabulky "fields"                
                         case ["records","idrecord"]:$idFieldSrcRec = $colVals[] = $hodnota;     // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     break;
-                        case ["records","idstatus"]:$colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                        case ["records","idstatus"]:$idstat = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                                                    $colVals[] = $emptyToNA && empty($idstat) ? "n/a":$idstat;  // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]                       
                                                     break;
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -674,13 +683,18 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    $callsVals = [  $item["id_call"],
-                                                                    $item["call_time"],
+                                                    // 
+                                                    // příprava hodnot do řádku výstupní tabulky 'calls':
+                                                    if (!callTimeRngCheck($item["callTime"])) {continue 3;} // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
+                                                    $iduser = $emptyToNA && empty($iduser) ? "n/a":$iduser; // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]
+                                                    
+                                                    $callsVals = [  $item["id_call"],                       // konstrukce řádku výstupní tabulky 'calls'
+                                                                    $item["callTime"],
                                                                     $item["direction"],
-                                                                    $item["answered"],
+                                                                    boolValsUnify($item["answered"]),
                                                                     $idqueue,
                                                                     $iduser,
-                                                                    $item["clid"],
+                                                                    phoneNumberCanonic($item["clid"]),
                                                                     $item["contact"]["_sys"]["id"],
                                                                     $item["did"],
                                                                     $item["wait_time"],
