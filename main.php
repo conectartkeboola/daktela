@@ -451,7 +451,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 }
             }
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
-                logInfo($tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> ");       // diag. výstup do logu
+                logInfo($tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> ", "jsonParseInfo");  // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["idTab"]));  // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["idTab"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
@@ -516,7 +516,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         foreach ($tabsFakeRow as $ftab) {
             $frow = array_merge([$fakeId, $fakeTitle], array_fill(2, $outTabsColsCount[$ftab] - 2, ""));
             ${"out_".$ftab} -> writeRow($frow);
-            logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID '".$fakeId."' A NÁZVEM '".$fakeTitle."' DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
+            logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID ".$fakeId." A NÁZVEM ".$fakeTitle." DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
         }               // umělý řádek do aktuálně iterované tabulky ... ["n/a", "(empty value"), "", ... , ""]          
     }
     // ==========================================================================================================================================================================================
