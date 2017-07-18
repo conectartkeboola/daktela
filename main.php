@@ -244,9 +244,9 @@ function setIdLength ($instId = 0, $str, $useInstPref = true, $objType = "tab") 
                     }   
     }
 }                                                       // prefixují se jen vyplněné hodnoty (strlen > 0)
-function logInfo ($text) {                              // volitelné diagnostické výstupy do logu
+function logInfo ($text, $dumpLevel="basicStatusInfo") {// volitelné diagnostické výstupy do logu
     global $diagOutOptions;
-    echo $diagOutOptions["basicStatusInfo"] ? $text."\n" : "";
+    echo $diagOutOptions[$dumpLevel] ? $text."\n" : "";
 }
 function groupNameParse ($str) {                        // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $delim;
@@ -419,7 +419,7 @@ function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo 
     return false;                           // nedošlo k přetečení (OK)
 }
 function jsonParse ($formArr) {     // formArr je 2D-pole    
-    global $formFieldsOuts, $tab, $fields, $idFieldSrcRec, $idFormat, $instId, $diagOutOptions, $adhocDump;
+    global $formFieldsOuts, $tab, $fields, $idFieldSrcRec, $idFormat, $instId, $adhocDump;
     global ${"out_".$formFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
         if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
@@ -446,7 +446,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
-                    logInfo($tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]");
+                    logInfo($tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]", "jsonParseInfo");
                     $idfield = $idfi; break;
                 }
             }
@@ -459,7 +459,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                     if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
                     if ($field["name"] == $key) {
-                        logInfo("ALTERNATIVNÍ POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]");
+                        logInfo("  ALTERNATIVNÍ POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]", "jsonParseInfo");
                         $idfield = $idfi; break;
                     }
                 }
