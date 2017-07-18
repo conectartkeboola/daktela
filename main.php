@@ -514,7 +514,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     // vytvoření záznamů s umělým ID v tabulkách definovaných proměnnou $tabsFakeRow (kvůli JOINu tabulek v GoodData) [volitelné]
     if ($emptyToNA) {
         foreach ($tabsFakeRow as $ftab) {
-            $frow = array_merge([$fakeId, $fakeTitle], array_fill(2, count($outTabsColsCount[$ftab]) - 2, ""));
+            $frow = array_merge([$fakeId, $fakeTitle], array_fill(2, $outTabsColsCount[$ftab] - 2, ""));
             ${"out_".$ftab} -> writeRow($frow);
             logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID '".$fakeId."' A NÁZVEM '".$fakeTitle."' DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
         }               // umělý řádek do aktuálně iterované tabulky ... ["n/a", "(empty value"), "", ... , ""]          
