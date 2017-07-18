@@ -490,7 +490,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         ${"out_".$tab} -> writeRow($colsOut);
     }
     echo $diagOutOptions["basicStatusInfo"] ? "VÝSTUPNÍ SOUBORY VYTVOŘENY\n" : "";      // volitelný diagnostický výstup do logu
-    //
+    
     // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
     if ($emptyToNA) {
         $userNA   = ["n/a", "(empty value)", "", ""];       // hodnoty [iduser, title, idinstance, email]
@@ -683,13 +683,13 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    // 
+                                                    
                                                     // příprava hodnot do řádku výstupní tabulky 'calls':
-                                                    if (!callTimeRngCheck($item["callTime"])) {continue 3;} // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
+                                                    if (!callTimeRngCheck($item["call_time"])) {continue 3;} // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
                                                     $iduser = $emptyToNA && empty($iduser) ? "n/a":$iduser; // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]
                                                     
                                                     $callsVals = [  $item["id_call"],                       // konstrukce řádku výstupní tabulky 'calls'
-                                                                    $item["callTime"],
+                                                                    $item["call_time"],
                                                                     $item["direction"],
                                                                     boolValsUnify($item["answered"]),
                                                                     $idqueue,
