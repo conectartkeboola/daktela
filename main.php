@@ -533,8 +533,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     continue 4;                                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
                 }
                 
-                $colVals = $fieldRow  = [];                                         // řádek výstupní tabulky | záznam do pole formulářových polí     
-                unset($idFieldSrcRec);                                              // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí
+                $colVals = $callsVals = $fieldRow = [];                             // řádek výstupní tabulky | záznam do pole formulářových polí     
+                unset($idFieldSrcRec, $idqueue, $iduser, $type);                    // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí
                 $columnId  = 0;                                                     // index sloupce (v každém řádku číslovány sloupce 0,1,2,...)
                 foreach ($cols as $colName => $prefixVal) {                         // konstrukce řádku výstupní tabulky (vložení hodnot řádku) [= iterace sloupců]
                     // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -677,17 +677,16 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["activities", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
-                        case ["activities", "type"]:$colVals[]= $type = $hodnota;   // $type ... pro použití v case ["activities", "item"]
+                        case ["activities", "type"]:$colVals[] = $type = $hodnota;  // $type ... pro použití v case ["activities", "item"]
                                                     break;                        
                         case ["activities", "item"]:$colVals[] = $hodnota;          // obecně objekt (JSON), propisováno do OUT bucketu i bez parsování (potřebuji 'duration' v performance reportu)
                                                     if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
+                                                    // pokračování pro případy, kdy je aktivit\ typu 'CALL'
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
-                                                    
-                                                    // příprava hodnot do řádku výstupní tabulky 'calls':
-                                                    if (!callTimeRngCheck($item["call_time"])) {continue 3;} // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
+                                                    // příprava hodnot do řádku výstupní tabulky 'calls'
+                                                    if (!callTimeRngCheck($item["call_time"])) {continue 3;}// 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
                                                     $iduser = $emptyToNA && empty($iduser) ? "n/a":$iduser; // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]
-                                                    
                                                     $callsVals = [  $item["id_call"],                       // konstrukce řádku výstupní tabulky 'calls'
                                                                     $item["call_time"],
                                                                     $item["direction"],
