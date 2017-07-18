@@ -167,16 +167,28 @@ $tabsList_InOut_OutOnly = [
     6                   => array_keys($tabs_InOut_OutOnly[6])
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// pole obsahující unikátní seznam výstupních tabulek všech verzí Daktely s počtem sloupců jednotlivých tabulek
+$outTabsColsCount = [];
+foreach ($tabs_InOut_OutOnly as $verTabs) {                     // iterace podle verzí Daktely (klíč = 5, 6, ...)
+    foreach ($verTabs as $tab => $cols) {                       // iterace definic tabulek v rámci dané verze
+        if (!array_key_exists($tab, $outTabsColsCount)) {
+            $outTabsColsCount[$tab] = count($cols);
+        }
+    } 
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
 $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ostatní proměnné
 
-// volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
-// 1) nahradí prázdný atribut calls.idcall hodnotou 'n/a';  2) na začátek tabulky 'users' vloží fiktivního "uživatele" s iduser = 'n/a' (kvůli párování v GD
-// motivace:  pro filtrování v GD je třeba mít vedle reálných iduser k dispozici i 'n/a', které GD interpretuje jako "(empty value)"
-$emptyToNA = true;
+// volitelná náhrada prázdných hodnot ID umělou hodnotou ID, která odpovídá umělému title
+// motivace:  pro joinování tabulek v GD (tam se prázdná hodnota defaultně označuje jako "(empty value)")
+$emptyToNA   = true;
+$fakeId      = "n/a";
+$fakeTitle   = "(empty value)";
+$tabsFakeRow = ["users", "queues", "statuses"];
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
@@ -219,19 +231,23 @@ $keywords = [
 ];
 // ==============================================================================================================================================================================================
 // funkce
-                                                            // prefixování hodnoty atributu identifikátorem instance + nastavení požadované délky num. řetězců
+                                                        // prefixování hodnoty atributu identifikátorem instance + nastavení požadované délky num. řetězců
 function setIdLength ($instId = 0, $str, $useInstPref = true, $objType = "tab") { 
     global $idFormat;
     $len = $objType=="tab" ? $idFormat["idTab"] : $idFormat["idField"]; // jde o ID položky tabuky / ID form. pole (objType = tab / fielf)
     switch (!strlen($str)) {
-        case true:  return "";                              // vstupní hodnota je řetězec nulové délky
+        case true:  return "";                          // vstupní hodnota je řetězec nulové délky
         case false: $idFormated = !empty($len) ? sprintf('%0'.$len.'s', $str) : $str;
-                    switch ($useInstPref) {                 // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
+                    switch ($useInstPref) {             // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
                         case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["sep"] . $idFormated;
                         case false: return $idFormated;    
                     }   
     }
 }                                                       // prefixují se jen vyplněné hodnoty (strlen > 0)
+function logInfo ($text) {                              // volitelné diagnostické výstupy do logu
+    global $diagOutOptions;
+    echo $diagOutOptions["basicStatusInfo"] ? $text."\n" : "";
+}
 function groupNameParse ($str) {                        // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $delim;
     $match = [];                                        // "match array"
@@ -384,15 +400,19 @@ function iterStatuses ($val, $valType = "statusIdOrig") {   // prohledání 3D-p
 function callTimeRngCheck ($val) {
     global $incrementalOn, $incremHistDays; 
     if ($incrementalOn &&           // je-li u tabulky 'calls' požadován jen inkrementální výstup (hovory novější než...) ...
-        substr($val, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... pak je-li daný hovor starší než... ($val je datumočas) ...   
+        substr($val, 0, 10) < date("Y-m-d", strtotime(-$incremHistDays." days"))) { // ... ignorujeme záznamy starší než... ($val je datumočas)   
             return false;
     }        
     return true;
 }
+function emptyToNA ($id) {          // prázdné hodnoty nahradí hodnotou $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]
+    global $emptyToNA, $fakeId;
+    return ($emptyToNA && empty($id)) ? $fakeId : $id;
+}
 function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo nedošlo (false) k přetečení délky ID určené proměnnou $idFormat["idTab"] ...
     global $idFormat, $tab, $diagOutOptions;// ... nebo umělým ID (groups, statuses, fieldValues)
         if ($val > pow(10, $idFormat["idTab"])) {
-            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU ZÁZNAMŮ V TABULCE ".$tab."\n" : "";   // volitelný diagnostický výstup do logu
+            logInfo("PŘETEČENÍ DÉLKY INDEXU ZÁZNAMŮ V TABULCE ".$tab);          // volitelný diagnostický výstup do logu
             $idFormat["idTab"]++;
             return true;                    // došlo k přetečení → je třeba začít plnit OUT tabulky znovu, s delšími ID
         }
@@ -414,7 +434,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
             $idVal++;                                                           // inkrement umělého ID hodnot formulářových polí
             if ($idVal == pow(10, $idFormat["idField"])) {                      // došlo k přetečení délky indexů hodnot form. polí
-            echo $diagOutOptions["basicStatusInfo"] ? "PŘETEČENÍ DÉLKY INDEXU HODNOT FORM. POLÍ V TABULCE ".$tab."\n" : ""; // volitelný diagnostický výstup do logu
+            logInfo("PŘETEČENÍ DÉLKY INDEXU HODNOT FORM. POLÍ V TABULCE ".$tab);// volitelný diagnostický výstup do logu
             $idFormat["idField"]++;            
             }   // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
             // ----------------------------------------------------------------------------------------------------------------------------------         
@@ -426,12 +446,12 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
-                    echo $diagOutOptions["jsonParseInfo"] ? $tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
+                    logInfo($tab." - NALEZENO PREFEROVANÉ FORM. POLE [".$idfi.", ".$field['name'].", ".$field['title']."]");
                     $idfield = $idfi; break;
                 }
             }
             if ($idfield == "") {   // nebylo-li nalezeno form. pole odpovídajícího name, pokračuje hledání v druhém z typů form. polí (fields/crmFields)
-                echo $diagOutOptions["jsonParseInfo"] ? $tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> " : "";  // diag. výstup do logu
+                logInfo($tab." - NENALEZENO PREFEROVANÉ FORM. POLE -> ");       // diag. výstup do logu
                 foreach ($fields as $idfi => $field) {
                     $instDig       = floor($idfi/pow(10, $idFormat["idTab"]));  // číslice vyjadřující ID aktuálně zpracovávané instance
                     $fieldShiftDig = floor($idfi/pow(10, $idFormat["idTab"]-1)) - 10* $instId; // číslice vyjadřující posun indexace crmFields vůči fields (0/1)
@@ -439,7 +459,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
                     if (($tab == "crmRecords" && $fieldShiftDig == 1) ||
                         ($tab != "crmRecords" && $fieldShiftDig == 0) ) {continue;} // výběr form. polí odpovídajícího původu
                     if ($field["name"] == $key) {
-                        echo $diagOutOptions["jsonParseInfo"] ? "ALTERNATIVNÍ POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]\n" : "";
+                        logInfo("ALTERNATIVNÍ POLE JE [".$idfi.", ".$field['name'].", ".$field['title']."]");
                         $idfield = $idfi; break;
                     }
                 }
@@ -459,7 +479,7 @@ function jsonParse ($formArr) {     // formArr je 2D-pole
         }    
     }
 }
-echo $diagOutOptions["basicStatusInfo"] ? "PROMĚNNÉ A FUNKCE ZAVEDENY\n" : "";  // volitelný diagnostický výstup do logu
+logInfo("PROMĚNNÉ A FUNKCE ZAVEDENY");                                          // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
 // načtení vstupních souborů
 foreach ($instances as $instId => $inst) {
@@ -467,9 +487,9 @@ foreach ($instances as $instId => $inst) {
         ${"in_".$file."_".$instId} = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_".$file."_".$instId.".csv");
     }
 }
-echo $diagOutOptions["basicStatusInfo"] ? "VSTUPNÍ SOUBORY NAČTENY\n" : "";     // volitelný diagnostický výstup do logu
+logInfo("VSTUPNÍ SOUBORY NAČTENY");     // volitelný diagnostický výstup do logu
 // ==============================================================================================================================================================================================
-echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ DAT\n" : "";     // volitelný diagnostický výstup do logu
+logInfo("ZAHÁJENO ZPRACOVÁNÍ DAT");     // volitelný diagnostický výstup do logu
 $idFormatIdEnoughDigits = false;        // příznak potvrzující, že počet číslic určený proměnnou $idFormat["idTab"] dostačoval k indexaci záznamů u všech tabulek (false = počáteční hodnota)
 $tabItems = [];                         // pole počitadel záznamů v jednotlivých tabulkách (ke kontrole nepřetečení počtu číslic určeném proměnnou $idFormat["idTab"])
 
@@ -482,6 +502,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     foreach ($tabsList_InOut_OutOnly[6] as $file) {
         ${"out_".$file} = new \Keboola\Csv\CsvFile($dataDir."out".$ds."tables".$ds."out_".$file.".csv");
     }
+    logInfo("VÝSTUPNÍ SOUBORY VYTVOŘENY");                  // volitelný diagnostický výstup do logu
     // zápis hlaviček do výstupních souborů
     foreach ($tabs_InOut_OutOnly[6] as $tab => $cols) {
         $colsOut = array_key_exists($tab, $colsInOnly) ? array_diff(array_keys($cols), $colsInOnly[$tab]) : array_keys($cols);
@@ -489,14 +510,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         $colsOut = preg_filter("/^/", $colPrf, $colsOut);   // prefixace názvů sloupců ve výstupních tabulkách názvy tabulek kvůli rozlišení v GD (např. "title" → "groups_title")
         ${"out_".$tab} -> writeRow($colsOut);
     }
-    echo $diagOutOptions["basicStatusInfo"] ? "VÝSTUPNÍ SOUBORY VYTVOŘENY\n" : "";      // volitelný diagnostický výstup do logu
-    
-    // vytvoření fiktivního uživatele s iduser = 'n/a' v tabulce 'users' [volitelné] (pro spárování s calls.iduser bez hodnoty = predictive calls apod.)
+    logInfo("ZÁHLAVÍ DO VÝSTUPNÍCH SOUBORŮ VLOŽENA");       // volitelný diagnostický výstup do logu
+    // vytvoření záznamů s umělým ID v tabulkách definovaných proměnnou $tabsFakeRow (kvůli JOINu tabulek v GoodData) [volitelné]
     if ($emptyToNA) {
-        $userNA   = ["n/a", "(empty value)", "", ""];       // hodnoty [iduser, title, idinstance, email]
-        $statusNA = ["n/a", "(empty value)"];               // hodnoty [idstatus, title]
-        $out_users    -> writeRow($userNA);
-        $out_statuses -> writeRow($statusNA);
+        foreach ($tabsFakeRow as $ftab) {
+            $frow = array_merge([$fakeId, $fakeTitle], array_fill(2, count($outTabsColsCount[$ftab]) - 2, ""));
+            ${"out_".$ftab} -> writeRow($frow);
+            logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID '".$fakeId."' A NÁZVEM '".$fakeTitle."' DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
+        }               // umělý řádek do aktuálně iterované tabulky ... ["n/a", "(empty value"), "", ... , ""]          
     }
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
@@ -519,11 +540,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         if (!$commonStatuses)    {initStatuses();   }       // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
         if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
         if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť
-        echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
-
-        foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {
+        logInfo("ZAHÁJENO ZPRACOVÁNÍ INSTANCE ".$instId);   // volitelný diagnostický výstup do logu        
+        
+        foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {               // iterace tabulek
             
-            echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId."\n" : ""; // volitelný diagnostický výstup do logu
+            logInfo("ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId);    // volitelný diagnostický výstup do logu
             
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
@@ -571,7 +592,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
-                        case ["calls", "iduser"]:   $colVals[] = $emptyToNA && empty($hodnota) ? "n/a":$hodnota;// prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]                       
+                        case ["calls", "idqueue"]:  $colVals[] = emptyToNA($hodnota);                           // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]            
+                                                    break;
+                        case ["calls", "iduser"]:   $colVals[] = emptyToNA($hodnota);                           // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]                       
                                                     break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -615,7 +638,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["records","idrecord"]:$idFieldSrcRec = $colVals[] = $hodnota;     // uložení hodnoty 'idrecord' pro následné použití ve 'fieldValues'
                                                     break;
                         case ["records","idstatus"]:$idstat = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
-                                                    $colVals[] = $emptyToNA && empty($idstat) ? "n/a":$idstat;  // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]                       
+                                                    $colVals[] = emptyToNA($idstat);            // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]                       
                                                     break;
                         case ["records", "number"]: $colVals[] = phoneNumberCanonic($hodnota);  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -681,12 +704,13 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;                        
                         case ["activities", "item"]:$colVals[] = $hodnota;          // obecně objekt (JSON), propisováno do OUT bucketu i bez parsování (potřebuji 'duration' v performance reportu)
                                                     if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
-                                                    // pokračování pro případy, kdy je aktivit\ typu 'CALL'
+                                                    // pokračování pro případy, kdy je aktivita typu 'CALL'
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
                                                     // příprava hodnot do řádku výstupní tabulky 'calls'
                                                     if (!callTimeRngCheck($item["call_time"])) {continue 3;}// 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
-                                                    $iduser = $emptyToNA && empty($iduser) ? "n/a":$iduser; // prázdné hodnoty nahradí "n/a" - kvůli GoodData, aby zde byla nabídka "(empty value)" [volitelné]
+                                                    $idqueue = emptyToNA($idqueue); // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]
+                                                    $iduser  = emptyToNA($iduser);  // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]
                                                     $callsVals = [  $item["id_call"],                       // konstrukce řádku výstupní tabulky 'calls'
                                                                     $item["call_time"],
                                                                     $item["direction"],
@@ -748,11 +772,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 }
             }   // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
             // operace po zpracování dat v celé tabulce
-            echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
+            logInfo("DOKONČENO ZPRACOVÁNÍ TABULKY ".$tab." Z INSTANCE ".$instId);   // volitelný diagnostický výstup do logu
         }
         // operace po zpracování dat ve všech tabulkách jedné instance
                         //echo "pole 'fields' instance ".$instId.":\n"; print_r($fields); echo "\n";
-        echo $diagOutOptions["basicStatusInfo"] ? "DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";                           // volitelný diagnostický výstup do logu
+        logInfo("DOKONČENO ZPRACOVÁNÍ INSTANCE ".$instId);                          // volitelný diagnostický výstup do logu
     }
     // operace po zpracování dat ve všech tabulkách všech instancí
 
@@ -772,5 +796,5 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 foreach ($instances as $instId => $inst) {
     $out_instances -> writeRow([$instId, $inst["url"]]);
 }
-echo $diagOutOptions["basicStatusInfo"] ? "TRANSFORMACE DOKONČENA" : "";        // volitelný diagnostický výstup do logu
+logInfo("TRANSFORMACE DOKONČENA");          // volitelný diagnostický výstup do logu
 ?>
