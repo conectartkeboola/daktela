@@ -246,7 +246,8 @@ function setIdLength ($instId = 0, $str, $useInstPref = true, $objType = "tab") 
 }                                                       // prefixují se jen vyplněné hodnoty (strlen > 0)
 function logInfo ($text, $dumpLevel="basicStatusInfo") {// volitelné diagnostické výstupy do logu
     global $diagOutOptions;
-    echo $diagOutOptions[$dumpLevel] ? $text."\n" : "";
+    $dumpKey = array_key_exists($dumpLevel, $diagOutOptions) ? $dumpLevel : "basicStatusInfo";
+    echo $diagOutOptions[$dumpKey] ? $text."\n" : "";
 }
 function groupNameParse ($str) {                        // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
     global $delim;
@@ -626,7 +627,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = $hodnota;                                      // vložení title stavu jako druhého prvku do konstruovaného řádku                                           
                                                     break;
                         case ["recordSnapshots", "idstatus"]:
-                                                    $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                                                    $idstat = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
+                                                    $colVals[] = emptyToNA($idstat);            // prázdné hodnoty nahradí $fakeId - kvůli GoodData, aby zde byla nabídka $fakeTitle [volitelné]                       
                                                     break;
                         case ["fields", "idfield"]: $hodnota_shift = (int)$hodnota + $formFieldsIdShift;
                                                     $colVals[] = $fieldRow["idfield"] = $hodnota_shift;         // hodnota záznamu do pole formulářových polí
