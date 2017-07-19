@@ -188,7 +188,7 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
 $emptyToNA   = true;
 $fakeId      = "n/a";
 $fakeTitle   = "(empty value)";
-$tabsFakeRow = ["users", "queues", "statuses"];
+$tabsFakeRow = ["users", /*"queues",*/ "statuses"];
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
