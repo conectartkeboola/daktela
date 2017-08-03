@@ -70,6 +70,7 @@ $tabsInOutV56 = [
 // - 'records' a 'recordSnapshots' se odkazují na 'statuses'.'idstatus' → musí být uvedeny až za 'statuses' (pro případ použití commonStatuses)
 // - 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
 $tabsInOutV6 = [            // vstupně-výstupní tabulky používané pouze u Daktely v6
+    "readySessions"     =>  ["idreadysession" => 1, "start_time" => 0, "end_time" => 0, "duration" => 0, "iduser" => 1],
     "databases"         =>  ["iddatabase" => 1, "name" => 0, "title" => 0, "idqueue" => 1, "description" => 0, "stage" => 0, "deleted" => 0, "time" => 0, "idinstance" => 0],
     "contacts"          =>  ["idcontact" => 1, "name" => 0, "title" => 0, "firstname" => 0, "lastname" => 0, "idaccount" => 1, "iduser" => 1, "description" => 0,
                              "deleted" => 0, "idinstance" => 0, "form" => 0, "number" => 0],    
