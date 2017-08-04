@@ -38,9 +38,10 @@ $incremHistDays = $incrementalOn && !empty($jsonHistDays) && is_numeric($jsonHis
 // proměnné a konstanty
 
 // seznam instancí Daktela
-$instances = [  1   =>  ["url" => "https://ilinky.daktela.com",     "ver" => 5],
-                2   =>  ["url" => "https://dircom.daktela.com",     "ver" => 5],
-                3   =>  ["url" => "https://conectart.daktela.com",  "ver" => 6]
+$instances = [  1   =>  ["url" => "https://ilinky.daktela.com",       "ver" => 5],
+                2   =>  ["url" => "https://dircom.daktela.com",       "ver" => 5],
+                3   =>  ["url" => "https://conectart.daktela.com",    "ver" => 6],
+                4   =>  ["url" => "https://conectart-in.daktela.com", "ver" => 6]
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // struktura tabulek
