@@ -111,6 +111,7 @@ $tabsOutOnlyV56 = [         // tabulky, které vytváří transformace a objevuj
     "instances"         =>  ["idinstance" => 0, "url" => 0]    
 ];
 $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané pouze u Daktely v6
+    "databaseGroups"    =>  ["iddatabasegroup" => 1, "title" => 0],
     "calls"             =>  ["idcall" => 1, "call_time" => 0, "direction" => 0, "answered" => 0, "idqueue" => 1, "iduser" => 1, "clid" => 0,
                              "contact" => 0, "did" => 0, "wait_time" => 0, "ringing_time" => 0, "hold_time" => 0, "duration" => 0, "orig_pos" => 0,
                              "position" => 0, "disposition_cause" => 0, "disconnection_cause" => 0, "pressed_key" => 0, "missed_call" => 0,
@@ -175,7 +176,7 @@ $tabsList_InOut_OutOnly = [
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
-$instCommonOuts = ["statuses" => 1, "groups" => 1, "fieldValues" => 1];
+$instCommonOuts = ["statuses" => 1, "groups" => 1, "databaseGroups" => 1, "fieldValues" => 1];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ostatní proměnné
 // volitelné označení predictive calls (hovory s prázdným iduser) hodnotou iduser = 'n/a'
@@ -351,6 +352,12 @@ function initGroups () {                // nastavení výchozích hodnot proměn
     $idGroup            = 0;            // umělý inkrementální index pro číslování skupin
     $tabItems["groups"] = 0;            // vynulování počitadla záznamů v tabulce 'groups'
 }
+function initDbGroups () {              // nastavení výchozích hodnot proměnných popisujících skupiny
+    global $dbGroups, $idDbGroup, $tabItems;
+    $dbGroups             = [];         // 1D-pole skupin databází - prvek pole má tvar dbGroupName => iddatabasegroup
+    $idDbGroup            = 0;          // umělý inkrementální index pro číslování skupin databází
+    $tabItems["dbGroups"] = 0;          // vynulování počitadla záznamů v tabulce 'groups'
+}
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated, $tabItems;
     $statuses = [];                     /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
@@ -510,6 +517,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     setFieldsShift();                                       // výpočet konstant posunu indexování formulářových polí
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
+    initDbGroups();                                         // nastavení výchozích hodnot proměnných popisujících skupiny databází
     
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
@@ -520,9 +528,10 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     
     foreach ($instances as $instId => $inst) {              // procházení tabulek jednotlivých instancí Daktela
         initFields();                                       // nastavení výchozích hodnot proměnných popisujících formulářová pole         
-        if (!$commonStatuses)    {initStatuses();   }       // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
-        if (!$commonGroups)      {initGroups();     }       // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
-        if (!$commonFieldValues) {initFieldValues();}       // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť
+        if (!$commonStatuses)       {initStatuses();    }   // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
+        if (!$commonGroups)         {initGroups();      }   // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
+        if (!$commonDatabaseGroups) {initDbGroups();    }   // ID a názvy v out-only tabulce 'databaseGroups' požadujeme uvádět pro každou instanci zvlášť
+        if (!$commonFieldValues)    {initFieldValues(); }   // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť
         echo $diagOutOptions["basicStatusInfo"] ? "ZAHÁJENO ZPRACOVÁNÍ INSTANCE ".$instId."\n" : "";    // volitelný diagnostický výstup do logu
         foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {
             
@@ -552,7 +561,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
                                                     if (!strlen($groupName)) {                                  // název skupiny ve vstupní tabulce 'queues' nevyplněn ...
-                                                        $colVals[] = "";  break;                                // ... → stav se do výstupní tabulky 'queues' nezapíše
+                                                        $colVals[] = "";  break;                                // ... → ID skupiny se do výstupní tabulky 'queues' nezapíše
                                                     }  
                                                     if (!array_key_exists($groupName, $groups)) {               // skupina daného názvu dosud není uvedena v poli $groups 
                                                         $idGroup++;                                             // inkrement umělého ID skupiny   
@@ -565,7 +574,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     } else {
                                                         $idGroupFormated = $groups[$groupName];                 // získání idgroup dle názvu skupiny z pole $groups
                                                     }                                                
-                                                    $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny jako prvního prvku do konstruovaného řádku 
+                                                    $colVals[] = $idGroupFormated;                              // vložení formátovaného ID skupiny do konstruovaného řádku výstupní tabulky 'queues' 
                                                     break;
                         case ["calls", "call_time"]:if (!callTimeRngCheck($hodnota)) {                          // 'call_time' není z požadovaného rozsahu -> ...
                                                         continue 3;                                             // ... řádek z tabulky 'calls' přeskočíme
@@ -631,6 +640,24 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case [$tab,"idinstance"]:   $colVals[] = $instId;  break;   // hodnota = $instId    
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
                         // TABULKY V6 ONLY
+                        case ["databases", "description"]:
+                                                    $dbGroupName = groupNameParse($hodnota);                    // název skupiny databází parsovaný z databases.description pomocí delimiterů
+                                                    if (!strlen($dbGroupName)) {                                // název skupiny databází ve vstupní tabulce 'databases' nevyplněn ...
+                                                        $colVals[] = "";  break;                                // ... → ID skupiny databází se do výstupní tabulky 'databases' nezapíše
+                                                    }  
+                                                    if (!array_key_exists($dbGroupName, $dbGroups)) {           // skupina databází daného názvu dosud není uvedena v poli $dbGroups 
+                                                        $idDbGroup++;                                           // inkrement umělého ID skupiny databází   
+                                                        if (checkIdLengthOverflow($idDbGroup)) {                // došlo k přetečení délky ID určené proměnnou $idDbGroup
+                                                                continue 6;                                     // zpět na začátek cyklu 'while' (začít plnit OUT tabulky znovu, s delšími ID)
+                                                            }
+                                                        $idDbGroupFormated = setIdLength($instId,$idDbGroup,!$commonDatabaseGroups);// $commonDatabaseGroups → neprefixovat $idDbGroup identifikátorem instance
+                                                        $dbGroups[$dbGroupName] = $idDbGroupFormated;           // zápis skupiny databází do pole $dbGroups
+                                                        $out_databaseGroups -> writeRow([$idDbGroupFormated,$dbGroupName]); // zápis řádku do out-only tabulky 'databaseGroups' (řádek má tvar iddatabasegroup | dbGroupName)
+                                                    } else {
+                                                        $idDbGroupFormated = $dbGroups[$dbGroupName];           // získání iddatabasegroup dle názvu skupiny databází z pole $dbGroups
+                                                    }                                                
+                                                    $colVals[] = $idDbGroupFormated;                            // vložení formátovaného ID skupiny do konstruovaného řádku výstupní tabulky 'databases'
+                                                    break;
                         case ["contacts","idcontact"]:$idFieldSrcRec = $colVals[]= $hodnota;// uložení hodnoty 'idcontact' pro následné použití v 'contFieldVals'
                                                     break;
                         case ["contacts", "form"]:  $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
