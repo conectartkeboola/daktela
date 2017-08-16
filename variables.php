@@ -27,7 +27,7 @@ foreach ($instancesList as $instId => $instAttrs) {     // $instId = "1", "2", .
         - 'records' a 'recordSnapshots' se odkazují na 'statuses'.'idstatus' → musí být uvedeny až za 'statuses' (pro případ použití commonStatuses)
         - 'records' a 'fieldValues' se tvoří pomocí pole $fields vzniklého z tabulky 'fields' → musí být uvedeny až za 'fields' (kvůli foreach)
    detailní požadavky pořadí tabulek (respektující integritní vazby mezi tabulkami pro správnou funkci integritní validace - stejné jako u writeru):
-        skupina 1  -  (groups)*, (instances)*, statuses                                 *  - out-only tabulky, vznikají v transformaci
+        skupina 1  -  (groups)*, (databaseGroups)*, (instances)*, statuses              *  - out-only tabulky, vznikají v transformaci
         skupina 2  -  queues, fields, users, pauses, ticketSla**, crmRecordTypes**      ** - jen u v6
         skupina 3  -  accounts**, databases**, ticketCategories**, readySessions**, calls***, loginSessions, pauseSessions, queueSessions   *** - jen u v5
         skupina 4  -  contacts**, records
@@ -110,7 +110,7 @@ $tabsInOutV6_part1  = [
                                 "name"                  => ["instPrf" => 0],
                                 "title"                 => ["instPrf" => 0],
                                 "idqueue"               => ["instPrf" => 1, "fk" => "queues"],
-                                "iddatabasegroup"       => ["instPrf" => 0],    // v IN bucketu má sloupec název "description", PHP science z něj parsuje jen ID databáze
+                                "iddatabasegroup"       => ["instPrf" => 0, "fk" => "databaseGroups"],  // v IN bucketu má sloupec název "description", PHP science z něj parsuje jen ID databáze
                                 "stage"                 => ["instPrf" => 0],
                                 "deleted"               => ["instPrf" => 0],
                                 "time"                  => ["instPrf" => 0],
@@ -470,7 +470,9 @@ $instCommonOuts = ["statuses" => 1, "groups" => 1, "databaseGroups" => 1, "field
 $emptyToNA   = true;
 $fakeId      = "0";
 $fakeTitle   = "";                                          // původně "(empty value)"
-$tabsFakeRow = $tabsList_InOut[5] + $tabsList_InOut[6];     // = všechny InOut tabulky (sjednocení) napříč verzemi (původně jen ["users", "statuses"])
+$tabsFakeRow = $tabsList_InOut_OutOnly[6] + $tabsList_InOut_OutOnly[5];
+                                                            // = všechny InOut tabulky napříč verzemi (původně jen ["users", "statuses"])
+                                                            // sjednocení polí je nekomutativní!! - jinak jsou ve výsledném poli názvy některých tabulek 2× !!
 
 // počty číslic, na které jsou doplňovány ID's (kvůli řazení v GoodData je výhodné mít konst. délku ID's) a oddělovač prefixu od hodnoty
 $idFormat = [
