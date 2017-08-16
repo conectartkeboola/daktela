@@ -110,7 +110,7 @@ $tabsInOutV6_part1  = [
                                 "name"                  => ["instPrf" => 0],
                                 "title"                 => ["instPrf" => 0],
                                 "idqueue"               => ["instPrf" => 1, "fk" => "queues"],
-                                "iddatabase"            => ["instPrf" => 0],    // v IN bucketu má sloupec název "description", PHP science z něj parsuje jen ID databáze
+                                "iddatabasegroup"       => ["instPrf" => 0],    // v IN bucketu má sloupec název "description", PHP science z něj parsuje jen ID databáze
                                 "stage"                 => ["instPrf" => 0],
                                 "deleted"               => ["instPrf" => 0],
                                 "time"                  => ["instPrf" => 0],
