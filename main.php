@@ -79,12 +79,31 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
 
     // vytvoření záznamů s umělým ID v tabulkách definovaných proměnnou $tabsFakeRow (kvůli JOINu tabulek v GoodData) [volitelné]
     if ($emptyToNA) {
-        foreach ($tabsFakeRow as $ftab) {
+        /*foreach ($tabsFakeRow as $ftab) {
             $frow = array_merge([$fakeId, $fakeTitle], array_fill(2, $outTabsColsCount[$ftab] - 2, ""));
             ${"out_".$ftab} -> writeRow($frow);
             logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID \"".$fakeId."\" A NÁZVEM \"".$fakeTitle."\" DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
-        }               // umělý řádek do aktuálně iterované tabulky ... ["n/a", "(empty value"), "", ... , ""]          
-        $out_groups -> writeRow([$fakeId, $fakeTitle]);
+        }               // umělý řádek do aktuálně iterované tabulky ... ["0", "", "", ... , ""]          
+        */
+        foreach ($tabsFakeRow as $ftab) {
+            $frow = [];
+            foreach ($tabs_InOut_OutOnly[6] + $tabs_InOut_OutOnly[5] as $tabName => $col) {
+                foreach ($col as $colName => $colAttrs) {
+                    if ($tabName == $ftab) {
+                        if (array_key_exists("fk", $colAttrs) || array_key_exists("pk", $colAttrs)) {       // do sloupců typu FK nebo PK ...
+                            $frow[] = $fakeId;                                                              // ... se vloží $fakeId, ...
+                        } elseif (array_key_exists("title", $colAttrs)) {
+                            $frow[] = "";                                                                   // ... do sloupců obsahujících title se vloží $fakeTitle, ...
+                        } else {
+                            $frow[] = "";                                                                   // ... do ostatních sloupců se vloží ptázdná hodnota
+                        }
+                    }
+                }
+            }
+            ${"out_".$ftab} -> writeRow($frow);
+            logInfo("VLOŽEN UMĚLÝ ZÁZNAM S ID \"".$fakeId."\" A NÁZVEM \"".$fakeTitle."\" DO VÝSTUPNÍ TABULKY ".$ftab); // volitelný diag. výstup do logu
+        }
+        // $out_groups -> writeRow([$fakeId, $fakeTitle]);  // není třeba
     }
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
