@@ -90,12 +90,15 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
             foreach ($tabs_InOut_OutOnly[6] + $tabs_InOut_OutOnly[5] as $tabName => $col) {
                 foreach ($col as $colName => $colAttrs) {
                     if ($tabName == $ftab) {
-                        if (array_key_exists("fk", $colAttrs) || array_key_exists("pk", $colAttrs)) {       // do sloupců typu FK nebo PK ...
-                            $frow[] = $fakeId;                                                              // ... se vloží $fakeId, ...
+                        if (array_key_exists($tabName, $colsInOnly)) {
+                            if (in_array($colName, $colsInOnly[$tabName])) {continue;}                  // sloupec je in-only → přeskočit 
+                        }
+                        if (array_key_exists("fk", $colAttrs) || array_key_exists("pk", $colAttrs)) {   // do sloupců typu FK nebo PK ...
+                            $frow[] = $fakeId;                                                          // ... se vloží $fakeId, ...
                         } elseif (array_key_exists("title", $colAttrs)) {
-                            $frow[] = "";                                                                   // ... do sloupců obsahujících title se vloží $fakeTitle, ...
+                            $frow[] = "";                                                               // ... do sloupců obsahujících title se vloží $fakeTitle, ...
                         } else {
-                            $frow[] = "";                                                                   // ... do ostatních sloupců se vloží ptázdná hodnota
+                            $frow[] = "";                                                               // ... do ostatních sloupců se vloží ptázdná hodnota
                         }
                     }
                 }
