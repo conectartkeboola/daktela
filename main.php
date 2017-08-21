@@ -315,14 +315,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     // příprava hodnot do řádku výstupní tabulky 'calls':
                                                     if (!dateRngCheck($item["call_time"])) {continue 3;}    // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
 
-                                                    $callsVals = [  $item["id_call"],                       // konstrukce řádku výstupní tabulky 'calls'
+                                                    $callsVals = [  setIdLength($instId, $item["id_call"]), // konstrukce řádku výstupní tabulky 'calls'
                                                                     $item["call_time"],
                                                                     $item["direction"],
                                                                     boolValsUnify($item["answered"]),
-                                                                    emptyToNA($idqueue),
-                                                                    emptyToNA($iduser),
+                                                                    emptyToNA(setIdLength($instId, $idqueue)),
+                                                                    emptyToNA(setIdLength($instId, $iduser )),
                                                                     phoneNumberCanonic($item["clid"]),
-                                                                    $item["contact"]["_sys"]["id"],
+                                                                    $item["contact"]["_sys"]["id"],//
                                                                     $item["did"],
                                                                     $item["wait_time"],
                                                                     $item["ringing_time"],
@@ -338,7 +338,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                     $item["score"],
                                                                     $item["note"],
                                                                     $item["attemps"],
-                                                                    $item["qa_user_id"],
+                                                                    setIdLength($instId, $item["qa_user_id"]),
                                                                     $instId
                                                     ];
                                                     if (!empty($callsVals)) {                           // je sestaveno pole pro zápis do řádku výstupní tabulky 'calls'
