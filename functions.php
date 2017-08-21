@@ -5,8 +5,8 @@ function setIdLength ($instId = 0, $str, $useInstPref = true, $objType = "tab") 
     global $idFormat, $fakeId;
     $len = $objType=="tab" ? $idFormat["idTab"] : $idFormat["idField"]; // jde o ID položky tabuky / ID form. pole (objType = tab / field)
     switch ($str) {
-        case "":        return "";                      // vstupní hodnota je prázdný řetězec
-        case $fakeId:   return $fakeId;                 // vstupní hodnota je prázdný řetězec po průchodem fcí emptyToNA, tj. $fakeId (typicky 'n/a')
+        case NULL:      return "";                      // vstupní hodnota je NULL nebo prázdný řetězec (obojí se interpretuje jako NULL)
+        case $fakeId:   return $fakeId;                 // vstupní hodnota je prázdný řetězec po průchodem fcí emptyToNA, tj. $fakeId (typicky '0')
         default:        $idFormated = !empty($len) ? sprintf('%0'.$len.'s', $str) : $str;
                         switch ($useInstPref) {         // true = prefixovat hodnotu identifikátorem instance a oddělovacím znakem
                             case true:  return sprintf('%0'.$idFormat["instId"].'s', $instId) . $idFormat["sep"] . $idFormated;
