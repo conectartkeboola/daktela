@@ -325,7 +325,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                     emptyToNA($idqueue),
                                                                     emptyToNA($iduser),
                                                                     phoneNumberCanonic($item["clid"]),
-                                                                    emptyToNA(setIdLength($item["contact"]["_sys"]["id"])),
+                                                                    emptyToNA(setIdLength($instId, $item["contact"]["_sys"]["id"])),
                                                                     $item["did"],
                                                                     $item["wait_time"],
                                                                     $item["ringing_time"],
