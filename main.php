@@ -311,18 +311,21 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                                                     if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
+                                                                                        
+                                                    if (array_key_exists("call_time", $item)) {
+                                                        if (!dateRngCheck($item["call_time"])) {continue 3;}// 'call_time' není z požadovaného rozsahu → řádek z tabulky 'activities' přeskočíme                                                    
+                                                    }                                                    
+                                                    if (empty($item["id_call"])) {break;}                   // nevyplněno idcall → chybí PK záznamu do tabulky 'calls' → řádek přeskočíme
 
                                                     // příprava hodnot do řádku výstupní tabulky 'calls':
-                                                    if (!dateRngCheck($item["call_time"])) {continue 3;}    // 'call_time' není z požadovaného rozsahu -> řádek z tabulky 'activities' přeskočíme
-
                                                     $callsVals = [  setIdLength($instId, $item["id_call"]), // konstrukce řádku výstupní tabulky 'calls'
                                                                     $item["call_time"],
                                                                     $item["direction"],
                                                                     boolValsUnify($item["answered"]),
-                                                                    emptyToNA(setIdLength($instId, $idqueue)),
-                                                                    emptyToNA(setIdLength($instId, $iduser )),
+                                                                    emptyToNA($idqueue),
+                                                                    emptyToNA($iduser),
                                                                     phoneNumberCanonic($item["clid"]),
-                                                                    $item["contact"]["_sys"]["id"],//
+                                                                    emptyToNA(setIdLength($item["contact"]["_sys"]["id"])),
                                                                     $item["did"],
                                                                     $item["wait_time"],
                                                                     $item["ringing_time"],
