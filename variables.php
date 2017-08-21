@@ -29,8 +29,8 @@ foreach ($instancesList as $instId => $instAttrs) {     // $instId = "1", "2", .
    detailní požadavky pořadí tabulek (respektující integritní vazby mezi tabulkami pro správnou funkci integritní validace - stejné jako u writeru):
         skupina 1  -  (groups)*, (databaseGroups)*, (instances)*, statuses              *  - out-only tabulky, vznikají v transformaci
         skupina 2  -  queues, fields, users, pauses, ticketSla**, crmRecordTypes**      ** - jen u v6
-        skupina 3  -  accounts**, databases**, ticketCategories**, readySessions**, calls***, loginSessions, pauseSessions, queueSessions   *** - jen u v5
-        skupina 4  -  contacts**, records
+        skupina 3  -  accounts**, databases**, ticketCategories**, readySessions**, loginSessions, pauseSessions, queueSessions   *** - jen u v5
+        skupina 4  -  contacts**, records, calls***
         skupina 5  -  recordSnapshots, (fieldValues)*, (contFieldVals)*, tickets**
         skupina 6  -  crmRecords**, activities**, (tickFieldVals)*                                     
         skupina 7  -  crmRecordSnapshots**, (crmFieldVals)*
