@@ -325,8 +325,8 @@ $tabsInOut = [
 // jen výstupní tabulky
 $tabsOutOnlyV56 = [         // tabulky, které vytváří transformace a objevují se až na výstupu (nejsou ve vstupním bucketu KBC) používané u Daktely v5 i v6
     "fieldValues"       =>  [   "idfieldvalue"          => ["instPrf" => 1, "pk" => 1],
-                                "idrecord"              => ["instPrf" => 1],
-                                "idfield"               => ["instPrf" => 1],
+                                "idrecord"              => ["instPrf" => 1, "fk" => "records"],
+                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ],
     "groups"            =>  [   "idgroup"               => ["instPrf" => 1, "pk" => 1],
@@ -344,10 +344,10 @@ $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevuj
                                 "call_time"             => ["instPrf" => 0],
                                 "direction"             => ["instPrf" => 0],
                                 "answered"              => ["instPrf" => 0],
-                                "idqueue"               => ["instPrf" => 1],
-                                "iduser"                => ["instPrf" => 1],
+                                "idqueue"               => ["instPrf" => 1, "fk" => "queues"],
+                                "iduser"                => ["instPrf" => 1, "fk" => "users"],
                                 "clid"                  => ["instPrf" => 0],
-                                "contact"               => ["instPrf" => 0],
+                                "contact"               => ["instPrf" => 0, "fk" => "contacts"],
                                 "did"                   => ["instPrf" => 0],
                                 "wait_time"             => ["instPrf" => 0],
                                 "ringing_time"          => ["instPrf" => 0],
@@ -363,27 +363,27 @@ $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevuj
                                 "score"                 => ["instPrf" => 0],
                                 "note"                  => ["instPrf" => 0],
                                 "attemps"               => ["instPrf" => 0],
-                                "qa_user_id"            => ["instPrf" => 0],
-                                "idinstance"            => ["instPrf" => 0]
+                                "qa_user_id"            => ["instPrf" => 0, "fk" => "users"],
+                                "idinstance"            => ["instPrf" => 0, "fk" => "instances"]
                             ],
     "contFieldVals"     =>  [   "idcontfieldval"        => ["instPrf" => 1, "pk" => 1],
-                                "idcontact"             => ["instPrf" => 1],
-                                "idfield"               => ["instPrf" => 1],
+                                "idcontact"             => ["instPrf" => 1, "fk" => "contacts"],
+                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ],                                                  // hodnoty formulářových polí z tabulky "contacts"
     "tickFieldVals"     =>  [   "idtickfieldval"        => ["instPrf" => 1, "pk" => 1],
-                                "idticket"              => ["instPrf" => 1],
-                                "idfield"               => ["instPrf" => 1],
+                                "idticket"              => ["instPrf" => 1, "fk" => "tickets"],
+                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ],                                                  // hodnoty formulářových polí z tabulky "tickets"
     "crmFieldVals"      =>  [   "idcrmfieldval"         => ["instPrf" => 1, "pk" => 1],
-                                "idcrmrecord"           => ["instPrf" => 1],
-                                "idfield"               => ["instPrf" => 1],
+                                "idcrmrecord"           => ["instPrf" => 1, "fk" => "crmRecords"],
+                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ],                                                  // hodnoty formulářových polí z tabulky "crmRecords"
     /* "actItemVals"    =>  [   "idactfieldval"         => ["instPrf" => 1, "pk" => 1],
-                                "idactivity"            => ["instPrf" => 1],
-                                "idfield"               => ["instPrf" => 1],
+                                "idactivity"            => ["instPrf" => 1, "fk" => "activities"],
+                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ]                                                   // hodnoty pole "item" z tabulky "contacts" 
     */
