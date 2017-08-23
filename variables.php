@@ -190,7 +190,7 @@ $tabsInOutV56_part2 = [
                                 "start_time"            =>  ["instPrf" => 0, "ti" => 1],
                                 "end_time"              =>  ["instPrf" => 0],
                                 "duration"              =>  ["instPrf" => 0],
-                                "idpause"               =>  ["instPrf" => 0, "fk" => "pauses"],
+                                "idpause"               =>  ["instPrf" => 1, "fk" => "pauses"],
                                 "iduser"                =>  ["instPrf" => 1, "fk" => "users"]
                             ],
     "queueSessions"     =>  [   "idqueuesession"        =>  ["instPrf" => 1, "pk" => 1],
