@@ -237,21 +237,23 @@ function getJsonItem ($str, $key) {         // získání konkrétního prvku z 
     } else return $decod;                                                       // pokud by $decod nebylo ARRAY, ale jednoduchá hodnota (STRING/INT/BOOL), vrátí tuto hodnotu
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function jsonParseActivities ($formArr) {   // formArr je 2D-pole    
+function jsonParseActivities ($formArr) {   // formArr je vícerozměrné asociativní pole (dimenze pole není předem přesně známá) -> nutno buď rekurzivně prohledat, nebo ignorovat vnořená pole    
     global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $actItemsCount, $actItemValsCount, $idactivity, $idFormat, $instId;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
     global ${"out_".$jsonFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
-    foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
-        if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
-        $idVal = 0;                                                             // ID hodnoty konkrétního atributu ze sloupce activities.item
-        foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty atributů                                      
-            if (!strlen($val)) {continue;}                                      // vyřazení prázdných hodnot
+    //foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)
+    foreach ($formArr as $key => $val) {                                          // $val je většinou string, někde vnořené pole                                                      
+        //if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
+        //$idVal = 0;                                                             // ID hodnoty konkrétního atributu ze sloupce activities.item
+        //foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty atributů                                      
+            //if (!strlen($val)) {continue;}                                      // vyřazení prázdných hodnot
+            if (is_array($val) || empty($val)) {continue;}                        // vyřazení vnořených polí a prázdných stringových hodnot
             // ----------------------------------------------------------------------------------------------------------------------------------
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot z activities.item
-            $idVal++;                                                           // inkrement umělého ID hodnot z activities.item
+            /*$idVal++;                                                           // inkrement umělého ID hodnot z activities.item
             if ($idVal == pow(10, $idFormat["idField"])) {                      // došlo k přetečení délky indexů hodnot z activities.item
             logInfo("PŘETEČENÍ DÉLKY INDEXU HODNOT Z item V TABULCE ".$tab);    // volitelný diagnostický výstup do logu
             $idFormat["idField"]++;            
-            }   // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
+            }  */ // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
             // ----------------------------------------------------------------------------------------------------------------------------------
             // hledání ID parametru z activities.item ($idactitem) v poli $actItems; při nenalezení je parametr přidán do pole $actItem a out-only tabulky "actItems"
             $idactitem = "";
@@ -267,13 +269,13 @@ function jsonParseActivities ($formArr) {   // formArr je 2D-pole
                 $out_actItems -> writeRow([$idactitem, $key]);                  // přidání definice parametru z activities.item do out-only tabulky "actItems"
             } // -------------------------------------------------------------------------------------------------------------------------------- 
             $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
-                $idactivity . $idactitem . setIdLength(0,$idVal,false,"field"), // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
+                $idactivity . $idactitem, /*. setIdLength(0,$idVal,false,"field"),*/  // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
                 $idactivity,                                                    // ID zdrojové aktivity obsahující parsovaný JSON
                 $idactitem,                                                     // idactitem
                 $val                                                            // hodnota parametru z activities.item
             ];                                                                                                                                                                     
             ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí
-        }    
+        //}    
     }
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
