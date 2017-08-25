@@ -296,7 +296,7 @@ $tabsInOutV6_part2 = [            // vstupně-výstupní tabulky používané po
                                 "time_close"            => ["instPrf" => 0],
                                 "created_by"            => ["instPrf" => 1],
                                 "idinstance"            => ["instPrf" => 0, "fk" => "instances"],
-                                "item"                  => ["instPrf" => 0, "json" => 1]               // "json" => <0/1> ~ jen rozparsovat / rozparsovat a pokračovat ve zpracování hodnoty
+                                "item"                  => ["instPrf" => 0/*, "json" => 1*/]               // "json" => <0/1> ~ jen rozparsovat / rozparsovat a pokračovat ve zpracování hodnoty
                             ],
     // skupina 7 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     "crmRecordSnapshots"=>  [   "idcrmrecordsnapshot"   => ["instPrf" => 1, "pk" => 1],
