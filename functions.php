@@ -262,7 +262,7 @@ function jsonParseActivities ($formArr) {   // formArr je 2D-pole
             }           
             if ($idactitem == "") {                                             // název parametru z activities.item nebyl nalezen v poli $actItems
                 $actItemsCount++;                                               // inkrement počítadla parametrů z activities.item
-                $idactitem = $actItemsCount;
+                $idactitem = setIdLength(0, $actItemsCount, false);
                 $actItems[$idactitem] = $key;                                   // přidání definice parametru z activities.item do pole $actItems
                 $out_actItems -> writeRow([$idactitem, $key]);                  // přidání definice parametru z activities.item do out-only tabulky "actItems"
             } // -------------------------------------------------------------------------------------------------------------------------------- 
