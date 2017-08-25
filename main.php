@@ -296,7 +296,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
                         case ["activities", "idactivity"]:
-                                                    $idactivity = $colVals[] = $hodnota;            // uložení hodnoty 'idactivity' pro následné použití v 'actItemVals'
+                                                    $colVals[]= $idactivity= $hodnota;// $idactivity ... pro použití u parsování JSONu v "activities"."item" (→ 'actItemVals')
+                                                    break;
                         case ["activities", "idqueue"]:
                                                     $colVals[]= $idqueue= $hodnota; // $idqueue ... pro použití v case ["activities", "item"]
                                                     break;
