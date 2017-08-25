@@ -159,6 +159,12 @@ function initDbGroups () {              // nastavení výchozích hodnot proměn
     $tabItems["dbGroups"] = 0;          // vynulování počitadla záznamů v tabulce 'groups'
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function initActItems () {              // inicializace pole reprezentujícího seznam parametrů z pole "item" tabulky "activities"
+    global $actItems, $actItemsCount;
+    $actItemsCount= $actItemValsCount=0;// inkrementální index parametrů a jejich hodnot z activities.item - slouží k tvorbě "idactitem" a "idactitemval"
+    $actItems = [];                     // 1D-pole parametrů z activities.item - prvek pole má tvar <idactitem> => <name> 
+}                                       // pole je vytvářeno společně pro všechny instance ver. 6
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated, $tabItems;
     $statuses = [];                     /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],
@@ -172,8 +178,8 @@ function initStatuses () {              // nastavení výchozích hodnot proměn
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function initFields () {                // nastavení výchozích hodnot proměnných popisujících formulářová pole
     global $fields;
-    $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <name> => ["idfield" => <hodnota>, "title" => <hodnota>]    
-}
+    $fields = [];                       // 2D-pole formulářových polí - prvek pole má tvar <idfield> => ["name" => <hodnota>, "title" => <hodnota>]  
+}                                       // pole je vytvářeno postupně zvlášť pro každou instanci
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function iterStatuses ($val, $valType = "statusIdOrig") {               // prohledání 3D-pole stavů $statuses
     global $statuses, $emptyToNA, $fakeId;                              // $val = hledaná hodnota;  $valType = "title" / "statusIdOrig"
@@ -231,20 +237,62 @@ function getJsonItem ($str, $key) {         // získání konkrétního prvku z 
     } else return $decod;                                                       // pokud by $decod nebylo ARRAY, ale jednoduchá hodnota (STRING/INT/BOOL), vrátí tuto hodnotu
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function jsonParseActivities ($formArr) {   // formArr je 2D-pole    
+    global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $actItemsCount, $actItemValsCount, $idactivity, $idFormat, $instId;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
+    global ${"out_".$jsonFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
+    foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
+        if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
+        $idVal = 0;                                                             // ID hodnoty konkrétního atributu ze sloupce activities.item
+        foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty atributů                                      
+            if (!strlen($val)) {continue;}                                      // vyřazení prázdných hodnot
+            // ----------------------------------------------------------------------------------------------------------------------------------
+            // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot z activities.item
+            $idVal++;                                                           // inkrement umělého ID hodnot z activities.item
+            if ($idVal == pow(10, $idFormat["idField"])) {                      // došlo k přetečení délky indexů hodnot z activities.item
+            logInfo("PŘETEČENÍ DÉLKY INDEXU HODNOT Z item V TABULCE ".$tab);    // volitelný diagnostický výstup do logu
+            $idFormat["idField"]++;            
+            }   // výstupy se nezačínají plnit znovu od začátku, jen se navýší počet číslic ID hodnot form. polí od dotčeného místa dále
+            // ----------------------------------------------------------------------------------------------------------------------------------
+            // hledání ID parametru z activities.item ($idactitem) v poli $actItems; při nenalezení je parametr přidán do pole $actItem a out-only tabulky "actItems"
+            $idactitem = "";
+            foreach ($actItems as $idItm => $itmName) {                         // v poli $actItems dohledám 'idactitem' ke známému názvu parametru ($key)
+                if ($itmName == $key) {
+                    $idactitem = $idItm; break;                                 // název parametru z activities.item byl nalezen v poli $actItems                    
+                }
+            }           
+            if ($idactitem == "") {                                             // název parametru z activities.item nebyl nalezen v poli $actItems
+                $actItemsCount++;                                               // inkrement počítadla parametrů z activities.item
+                $idactitem = $actItemsCount;
+                $actItems[$idactitem] = $key;                                   // přidání definice parametru z activities.item do pole $actItems
+                $out_actItems -> writeRow([$idactitem, $key]);                  // přidání definice parametru z activities.item do out-only tabulky "actItems"
+            } // -------------------------------------------------------------------------------------------------------------------------------- 
+            $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
+                $idactivity . $idactitem . setIdLength(0,$idVal,false,"field"), // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
+                $idactivity,                                                    // ID zdrojové aktivity obsahující parsovaný JSON
+                $idactitem,                                                     // idactitem
+                $val                                                            // hodnota parametru z activities.item
+            ];                                                                                                                                                                     
+            ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí
+        }    
+    }
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function jsonParse ($formArr) {             // formArr je 2D-pole    
-    global $formFieldsOuts, $tab, $fields, $idFieldSrcRec, $idFormat, $instId, $adhocDump;
-    global ${"out_".$formFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
+    global $jsonFieldsOuts, $tab, $fields, $idFieldSrcRec, $idFormat, $instId, $adhocDump;
+    global ${"out_".$jsonFieldsOuts[$tab]};                                     // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $valArr) {                                     // $valArr je 1D-pole, obvykle má jen klíč 0 (nebo žádný)                                                                                                
         if (empty($valArr)) {continue;}                                         // nevyplněné formulářové pole - neobsahuje žádný prvek
         $idVal = 0;                                                             // ID hodnoty konkrétního form. pole
-        foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí
-            $fieldVals = [];                                                    // záznam do out-only tabulky 'fieldValues'
+        foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí                                                   
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
             $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
             $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
+            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
+                                                                                // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
+            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
             // ----------------------------------------------------------------------------------------------------------------------------------
-            // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky 'fieldValues'
+            // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
             $idVal++;                                                           // inkrement umělého ID hodnot formulářových polí
             if ($idVal == pow(10, $idFormat["idField"])) {                      // došlo k přetečení délky indexů hodnot form. polí
             logInfo("PŘETEČENÍ DÉLKY INDEXU HODNOT FORM. POLÍ V TABULCE ".$tab);// volitelný diagnostický výstup do logu
@@ -253,9 +301,9 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
             // ----------------------------------------------------------------------------------------------------------------------------------         
             $idfield = "";
             foreach ($fields as $idfi => $field) {                              // v poli $fields dohledám 'idfield' ke známému 'name'
-                $instDig       = floor($idfi/pow(10, $idFormat["idTab"]));         // číslice vyjadřující ID aktuálně zpracovávané instance
+                //$instDig       = floor($idfi/pow(10, $idFormat["idTab"]));      // číslice vyjadřující ID aktuálně zpracovávané instance
                 $fieldShiftDig = floor($idfi/pow(10, $idFormat["idTab"]-1)) - 10* $instId;  // číslice vyjadřující posun indexace crmFields vůči fields (0/1) 
-                if ($instDig != $instId) {continue;}                            // nejedná se o formulářové pole z aktuálně zpracovávané instance
+                //if ($instDig != $instId) {continue;}                            // nejedná se o formulářové pole z aktuálně zpracovávané instance
                 if (($tab == "crmRecords" && $fieldShiftDig == 0) ||
                     ($tab != "crmRecords" && $fieldShiftDig == 1) ) {continue;} // výběr form. polí odpovídajícího původu (crmFields/fields) pro daný typ tabulky
                 if ($field["name"] == $key) {
@@ -277,16 +325,13 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
                     }
                 }
             } // --------------------------------------------------------------------------------------------------------------------------------                                                              
-            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
-                                                                                // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
-            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
-            $fieldVals = [
+            $fieldVals = [                                                      // záznam do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec . $idfield . setIdLength(0,$idVal,false,"field"),// ID cílového záznamu do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec,                                                 // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
                 $idfield,                                                       // idfield
                 $val                                                            // korigovaná hodnota formulářového pole
             ];                                                                                                                                                                     
-            ${"out_".$formFieldsOuts[$tab]} -> writeRow($fieldVals);            // zápis řádku do out-only tabulky hodnot formulářových polí
+            ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($fieldVals);            // zápis řádku do out-only tabulky hodnot formulářových polí
             if ($adhocDump["active"]) {if ($adhocDump["idFieldSrcRec"] == $idFieldSrcRec) {
                 echo $tab." - ADHOC DUMP (\$key = ".$key."): [idVal ".$fieldVals[0].", idSrcRec ".$fieldVals[1].", idfield ".$fieldVals[2].", val ".$fieldVals[3]."]\n";}}
         }    
@@ -299,7 +344,12 @@ function jsonProcessing ($instId, $tab, $colName, $hodnota) {                   
         if (array_key_exists($tab, $jsonList[$instId])) {
             if (array_key_exists($colName, $jsonList[$instId][$tab])) {         // sloupec obsahuje JSON
                 $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
-                if (!is_null($formArr)) {jsonParse($formArr);}                  // hodnota dekódovaného JSONu není NULL → lze ji prohledávat jako pole                
+                if (!is_null($formArr)) {                                       // hodnota dekódovaného JSONu není NULL → lze ji prohledávat jako pole  
+                    switch ($tab) {
+                        case "activities":  jsonParseActivities($formArr);      // uplatní se u tabulky "activities"
+                        default:            jsonParse($formArr);                // uplatní se u tabulek "records", "crmRecords", "contact" a "tickets"
+                    }
+                }                                
                 return $jsonList[$instId][$tab][$colName] ? true : false;       // buňka obsahovala JSON; po návratu z fce pokračovat/nepokračovat ve zpracování hodnoty
             }
         }

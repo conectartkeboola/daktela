@@ -42,7 +42,7 @@ foreach ($instancesList as $instId => $instAttrs) {     // $instId = "1", "2", .
                 "pk"   (nepovinné) - primární klíč (1),
                 "fk"   (nepovinné) - cizí klíč (tabName),
                 "tt"   (nepovinné) - sloupec obsahující title (1),
-                "json" (nepovinné) - jen rozparsovat / rozparsovat a pokračovat ve zpracování hodnoty (0/1),
+                "json" (nepovinné) - přítomnost klíče indikuje, že jde o JSON; 0/1 = jen rozparsovat / rozparsovat a pokračovat ve zpracování hodnoty (0/1),
                 "ti"   (nepovinné) - parametr pro časovou restrikci záznamů (1) - jen u tabulek obsahujících dynamické údaje
                                      [statické se nesmějí datumově restringovat (např. "crmRecordTypes" datem vytvoření), musejí být k dispozici] 
             ]
@@ -296,7 +296,7 @@ $tabsInOutV6_part2 = [            // vstupně-výstupní tabulky používané po
                                 "time_close"            => ["instPrf" => 0],
                                 "created_by"            => ["instPrf" => 1],
                                 "idinstance"            => ["instPrf" => 0, "fk" => "instances"],
-                                "item"                  => ["instPrf" => 0]
+                                "item"                  => ["instPrf" => 0, "json" => 1]               // "json" => <0/1> ~ jen rozparsovat / rozparsovat a pokračovat ve zpracování hodnoty
                             ],
     // skupina 7 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     "crmRecordSnapshots"=>  [   "idcrmrecordsnapshot"   => ["instPrf" => 1, "pk" => 1],
@@ -381,12 +381,15 @@ $tabsOutOnlyV6 = [          // tabulky, které vytváří transformace a objevuj
                                 "idfield"               => ["instPrf" => 1, "fk" => "fields"],
                                 "value"                 => ["instPrf" => 0]
                             ],                                                  // hodnoty formulářových polí z tabulky "crmRecords"
-    /* "actItemVals"    =>  [   "idactfieldval"         => ["instPrf" => 1, "pk" => 1],
+    "actItems"          =>  [   "idactitem"             => ["instPrf" => 0, "pk" => 1],
+                                "name"                  => ["instPrf" => 0]
+                            ],                                                  // seznam parametrů z pole "item" tabulky "activities"
+    "actItemVals"       =>  [   "idactitemval"          => ["instPrf" => 1, "pk" => 1],
                                 "idactivity"            => ["instPrf" => 1, "fk" => "activities"],
-                                "idfield"               => ["instPrf" => 1, "fk" => "fields"],
+                                "idactitem"             => ["instPrf" => 1, "fk" => "actItems"],
                                 "value"                 => ["instPrf" => 0]
-                            ]                                                   // hodnoty pole "item" z tabulky "contacts" 
-    */
+                            ]                                                   // hodnoty z pole "item" tabulky "activities" 
+    
 ];
 $tabsOutOnly = [
     5                   =>  $tabsOutOnlyV56,
@@ -394,12 +397,12 @@ $tabsOutOnly = [
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // parametry parsování JSON řetězců záznamů z formulářových polí do out-only tabulek hodnot formulářových polí
-$formFieldsOuts = [     // <vstupní tabulka kde se nachází form. pole> => [<název out-only tabulky hodnot form. polí>, <umělý inkrementální index hodnot form. polí>]
+$jsonFieldsOuts = [     // <vstupní tabulka kde se nachází form. pole> => [<název out-only tabulky hodnot form. polí>, <umělý inkrementální index hodnot form. polí>]
     "records"       =>  "fieldValues",
     "contacts"      =>  "contFieldVals",
     "tickets"       =>  "tickFieldVals",
     "crmRecords"    =>  "crmFieldVals",
-    //"activities"  =>  "actItemVals"
+    "activities"    =>  "actItemVals"
 ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // jen vstupní tabulky
@@ -462,7 +465,7 @@ foreach ($tabs_InOut_OutOnly as $verTabs) {                     // iterace podle
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // seznam výstupních tabulek, u kterých požadujeme mít ID a hodnoty společné pro všechny instance
                 // "název_tabulky" => 0/1 ~ vypnutí/zapnutí volitelného požadavku na indexaci záznamů v tabulce společnou pro všechny instance
-$instCommonOuts = ["statuses" => 1, "groups" => 1, "databaseGroups" => 1, "fieldValues" => 1];
+$instCommonOuts = ["statuses" => 1, "groups" => 1, "databaseGroups" => 1];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // ostatní proměnné
 

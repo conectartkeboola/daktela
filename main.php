@@ -117,6 +117,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
     initDbGroups();                                         // nastavení výchozích hodnot proměnných popisujících skupiny databází
+    initActItems();                                         // inicializace pole reprezentujícího seznam parametrů z pole "item" tabulky "activities"
 
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
@@ -131,7 +132,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         if (!$commonStatuses)       {initStatuses();    }   // ID a názvy v tabulce 'statuses' požadujeme uvádět pro každou instanci zvlášť    
         if (!$commonGroups)         {initGroups();      }   // ID a názvy v out-only tabulce 'groups' požadujeme uvádět pro každou instanci zvlášť
         if (!$commonDatabaseGroups) {initDbGroups();    }   // ID a názvy v out-only tabulce 'databaseGroups' požadujeme uvádět pro každou instanci zvlášť
-        if (!$commonFieldValues)    {initFieldValues(); }   // ID a titles v tabulce 'fieldValues' požadujeme uvádět pro každou instanci zvlášť
         logInfo("ZAHÁJENO ZPRACOVÁNÍ INSTANCE ".$instId);   // volitelný diagnostický výstup do logu
         
         // iterace tabulek dané instance --------------------------------------------------------------------------------------------------------------------------------------------------------
