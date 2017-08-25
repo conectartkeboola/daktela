@@ -155,8 +155,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 }
           
                 $colVals = $callsVals = $fieldRow = [];                             // řádek obecné výstupní tabulky | řádek výstupní tabulky 'calls' | záznam do pole formulářových polí     
-                unset($idFieldSrcRec, $idqueue, $iduser, $type);                    // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí + ID front, uživatelů a typu aktivity                               
-
+                unset($idFieldSrcRec, $idactivity, $idqueue, $iduser, $type);       // reset indexu zdrojového záznamu do out-only tabulky hodnot formulářových polí + ...
+                                                                                    // ... + indexu zdrojové aktivity do out-only tabulky 'actItemVals' + ID front, uživatelů a typu aktivity                               
                 $colId = 0;                                                         // index sloupce (v každém řádku číslovány sloupce 0,1,2,...) 
        
                 foreach ($cols as $colName => $colAttrs) {                          // konstrukce řádku výstupní tabulky (vložení hodnot řádku) [= iterace sloupců]                    
@@ -295,6 +295,8 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["crmRecordSnapshots", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
+                        case ["activities", "idactivity"]:
+                                                    $idactivity = $colVals[] = $hodnota;            // uložení hodnoty 'idactivity' pro následné použití v 'actItemVals'
                         case ["activities", "idqueue"]:
                                                     $colVals[]= $idqueue= $hodnota; // $idqueue ... pro použití v case ["activities", "item"]
                                                     break;
