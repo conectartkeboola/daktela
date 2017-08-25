@@ -348,8 +348,8 @@ function jsonProcessing ($instId, $tab, $colName, $hodnota) {                   
                 $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
                 if (!is_null($formArr)) {                                       // hodnota dekódovaného JSONu není NULL → lze ji prohledávat jako pole  
                     switch ($tab) {
-                        case "activities":  jsonParseActivities($formArr);      // uplatní se u tabulky "activities"
-                        default:            jsonParse($formArr);                // uplatní se u tabulek "records", "crmRecords", "contact" a "tickets"
+                      case "activities":  jsonParseActivities($formArr); break; // uplatní se u tabulky "activities"
+                      default:            jsonParse($formArr);                  // uplatní se u tabulek "records", "crmRecords", "contact" a "tickets"
                     }
                 }                                
                 return $jsonList[$instId][$tab][$colName] ? true : false;       // buňka obsahovala JSON; po návratu z fce pokračovat/nepokračovat ve zpracování hodnoty
