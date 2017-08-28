@@ -86,6 +86,10 @@ function remStrMultipl ($str, $delimiter = " ") {                               
     return implode($delimiter, array_unique(explode($delimiter, $str)));
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function replaceInvalidUtf8Chars ($str) {
+    return mb_convert_encoding($str, 'UTF-8', 'UTF-8');
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function convertDate ($dateStr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
     if (strlen($dateStr) <= 12) {$dateStr = str_replace(" ", "", $dateStr);}    // odebrání mezer u data do délky dd. mm. rrrr (12 znaků)
     $dateStr = preg_replace("/_/", "-", $dateStr);                              // náhrada případných podtržítek pomlčkami
@@ -244,6 +248,7 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
         if (is_array($val) && !$jsonParse["activities.item_parseNestedAttrs"]) {continue;}  // parsování vnořených ?D-polí není zapnuto
         if (is_array($val)) {jsonParseActivit($val, $keyChained); continue;}// parsování vnořených ?D-polí je zapnuto -> prohledává se dále rekurzivním voláním fce 
         // ----------------------------------------------------------------------------------------------------------------------------------
+        // $val není pole, ale jednoduchá hodnota
         // hledání ID parametru z activities.item ($idactitem) v poli $actItems; při nenalezení je parametr přidán do pole $actItem a out-only tabulky "actItems"
         if (array_key_exists($keyChained, $actItems)) {
             $idactitem = $actItems[$keyChained];                            // název parametru z activities.item byl nalezen v poli $actItems     
@@ -251,12 +256,14 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
             $idactitem = setIdLength(0, count($actItems) + 1, false);
             $actItems[$keyChained] = $idactitem;                            // přidání definice parametru z activities.item do pole $actItems
             $out_actItems -> writeRow([$idactitem, $keyChained]);           // přidání definice parametru z activities.item do out-only tabulky "actItems"
-        } // -------------------------------------------------------------------------------------------------------------------------------- 
+        } // --------------------------------------------------------------------------------------------------------------------------------         
+        $val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
+        $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty!        
         $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity . $idactitem,                                       // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity,                                                    // ID zdrojové aktivity obsahující parsovaný JSON
             $idactitem,                                                     // idactitem
-            strLenRestrict($val, 8000)                                      // hodnota parametru z activities.item (omezen počet znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty!)
+            $val                                                            // korigovaná hodnota parametru z activities.item
         ];                                                                                                                                                                     
         ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí 
     }
@@ -271,7 +278,9 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí                                                   
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
             $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
-            $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)                                                        
+            $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
+            $val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
+            $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty! 
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
@@ -314,7 +323,7 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
                 $idFieldSrcRec . $idfield . setIdLength(0,$idVal,false,"field"),// ID cílového záznamu do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec,                                                 // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
                 $idfield,                                                       // idfield
-                strLenRestrict($val, 8000)                                      // korigovaná hodnota formulářového pole (omezen počet znaků - GD dovolí až 65 535, obecně by se mohly vyskytnout i delší hodnoty)
+                $val                                                            // korigovaná hodnota formulářového pole
             ];                                                                                                                                                                     
             ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($fieldVals);            // zápis řádku do out-only tabulky hodnot formulářových polí
             if ($adhocDump["active"]) {if ($adhocDump["idFieldSrcRec"] == $idFieldSrcRec) {
