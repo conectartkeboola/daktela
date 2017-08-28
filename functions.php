@@ -236,7 +236,7 @@ function getJsonItem ($str, $key) {         // získání konkrétního prvku z 
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozměrné asociativní pole (dimenze pole není předem přesně známá) -> nutno rekurzivně prohledat (nebo ignorovat vnořená pole)
-    global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $actItemsCount, $actItemValsCount, $idactivity, $idFormat, $instId, $jsonParse;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
+    global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $idactivity, $idFormat, $instId, $jsonParse;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
     global ${"out_".$jsonFieldsOuts[$tab]};                                 // název out-only tabulky pro zápis hodnot formulářových polí
     foreach ($formArr as $key => $val) {                                    // $val je buď string, nebo vnořené ?D-pole (parsování vnořených atributů je volitelné)
         $keyChained = empty($parentKey) ? $key : $parentKey.".".$key;       // názvy klíčů vnořených polí jsou oddělovány tečkou (používá se u vnořených atributů)                                                    
