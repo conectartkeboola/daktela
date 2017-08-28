@@ -246,7 +246,7 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
         // ----------------------------------------------------------------------------------------------------------------------------------
         // hledání ID parametru z activities.item ($idactitem) v poli $actItems; při nenalezení je parametr přidán do pole $actItem a out-only tabulky "actItems"
         if (array_key_exists($keyChained, $actItems)) {
-            $idactitem = $actItems[$keyChained]; break;                     // název parametru z activities.item byl nalezen v poli $actItems     
+            $idactitem = $actItems[$keyChained];                            // název parametru z activities.item byl nalezen v poli $actItems     
         } else {                                                            // název parametru z activities.item nebyl nalezen v poli $actItems
             $idactitem = setIdLength(0, count($actItems) + 1, false);
             $actItems[$keyChained] = $idactitem;                            // přidání definice parametru z activities.item do pole $actItems
