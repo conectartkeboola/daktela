@@ -265,7 +265,7 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
             $idactitem,                                                     // idactitem
             $val                                                            // korigovaná hodnota parametru z activities.item
         ];                                                                                                                                                                     
-        ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí 
+      //  ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí 
     }
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -279,8 +279,8 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
             $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
             $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-            $val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
-            $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty! 
+        //    $val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
+        //    $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty! 
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
                                                                                 // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
