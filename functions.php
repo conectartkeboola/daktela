@@ -238,12 +238,13 @@ function getJsonItem ($str, $key) {         // získání konkrétního prvku z 
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozměrné asociativní pole (dimenze pole není předem přesně známá) -> nutno rekurzivně prohledat (nebo ignorovat vnořená pole)
-    global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $actItemsCount, $actItemValsCount, $idactivity, $idFormat, $instId;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
+    global $jsonFieldsOuts, $tab, $out_actItems, $actItems, $actItemsCount, $actItemValsCount, $idactivity, $idFormat, $instId, $jsonParse;  // $tab = "activities", $jsonFieldsOuts[$tab] = "actItemVals"
     global ${"out_".$jsonFieldsOuts[$tab]};                                 // název out-only tabulky pro zápis hodnot formulářových polí
-    foreach ($formArr as $key => $val) {                                    // $val je buď string, nebo vnořené ?D-pole
-        $keyChained = empty($parentKey) ? $key : $parentKey.".".$key;       // názvy klíčů vnořených polí jsou oddělovány tečkou                                                    
+    foreach ($formArr as $key => $val) {                                    // $val je buď string, nebo vnořené ?D-pole (parsování vnořených atributů je volitelné)
+        $keyChained = empty($parentKey) ? $key : $parentKey.".".$key;       // názvy klíčů vnořených polí jsou oddělovány tečkou (používá se u vnořených atributů)                                                    
         if (empty($val)) {continue;}                                        // vyřazení prázdných hodnot
-        if (is_array($val)) {jsonParseActivit($val, $keyChained); continue;}// je-li hodnotou vnořené ?D-pole, prohledává se dále rekurzivním voláním fce 
+        if (is_array($val) && !$jsonParse["activities.item_parseNestedAttrs"]) {continue;}  // parsování vnořených ?D-polí není zapnuto
+        if (is_array($val)) {jsonParseActivit($val, $keyChained); continue;}// parsování vnořených ?D-polí je zapnuto -> prohledává se dále rekurzivním voláním fce 
         // ----------------------------------------------------------------------------------------------------------------------------------
         // hledání ID parametru z activities.item ($idactitem) v poli $actItems; při nenalezení je parametr přidán do pole $actItem a out-only tabulky "actItems"
         $idactitem = "";
