@@ -111,6 +111,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     
     // načtení záznamů z tabulky "actItems" importované z OUT bucketu (jako zdroj existujícího číselníku actItems) do pole $actItems
     $actItems = [];                                                                                     // prvek pole má tvar <name> => <idactitem>
+    $in_actItems = new Keboola\Csv\CsvFile($dataDir."in".$ds."tables".$ds."in_actItems.csv");           // načtení souboru
     foreach ($in_actItems as $rowNum => $row) {                                                         // načítání řádků tabulky "actItems" z out-bucketu
         if ($rowNum == 0) {continue;}                                                                   // vynechání hlavičky tabulky
         $actItems[$row[1]] = $row[0];                                                                   // přidání prvku <name> => <idactitem>
