@@ -412,10 +412,7 @@ $tabsInOnlyV6  = [
                                 "title"                 => ["instPrf" => 0],
                                 "idinstance"            => ["instPrf" => 0],
                                 "name"                  => ["instPrf" => 0]
-                            ],
-    "actItems"          =>  [   "idactitem"             => ["instPrf" => 0],    // jde o číselník actItems importovaný z OUT bucketu → není třeba ID prefixovat
-                                "name"                  => ["instPrf" => 0]
-                            ]
+                            ]    
 ];
 $tabsInOnly = [
     5                   =>  array_merge($tabsInOnlyV5, $tabsInOnlyV56),

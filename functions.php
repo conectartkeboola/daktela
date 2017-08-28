@@ -159,11 +159,6 @@ function initDbGroups () {              // nastavení výchozích hodnot proměn
     $tabItems["dbGroups"] = 0;          // vynulování počitadla záznamů v tabulce 'groups'
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function initActItems () {              // inicializace pole reprezentujícího seznam parametrů z pole "item" tabulky "activities"
-    global $actItems;
-    $actItems = [];                     // 1D-pole parametrů z activities.item - prvek pole má tvar <name> => <idactitem>
-}                                       // pole je vytvářeno společně pro všechny instance ver. 6
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function initStatuses () {              // nastavení výchozích hodnot proměnných popisujících stavy
     global $statuses, $idStatus, $idstatusFormated, $tabItems;
     $statuses = [];                     /* 3D-pole stavů - prvek pole má tvar  <statusId> => ["title" => <hodnota>, "statusIdOrig" => [pole hodnot]],

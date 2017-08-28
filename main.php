@@ -108,6 +108,14 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         }
         // $out_groups -> writeRow([$fakeId, $fakeTitle]);  // není třeba
     }
+    
+    // načtení záznamů z tabulky "actItems" importované z OUT bucketu (jako zdroj existujícího číselníku actItems) do pole $actItems
+    $actItems = [];                                                                                     // prvek pole má tvar <name> => <idactitem>
+    foreach ($in_actItems as $rowNum => $row) {                                                         // načítání řádků tabulky "actItems" z out-bucketu
+        if ($rowNum == 0) {continue;}                                                                   // vynechání hlavičky tabulky
+        $actItems[$row[1]] = $row[0];                                                                   // přidání prvku <name> => <idactitem>
+    }
+    logInfo("NAČTEN ČÍSELNÍK actItems Z OUT-BUCKETU");                                                  // volitelný diagnostický výstup do logu 
     // ==========================================================================================================================================================================================
     // zápis záznamů do výstupních souborů
 
@@ -117,8 +125,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
     initStatuses();                                         // nastavení výchozích hodnot proměnných popisujících stavy
     initGroups();                                           // nastavení výchozích hodnot proměnných popisujících skupiny
     initDbGroups();                                         // nastavení výchozích hodnot proměnných popisujících skupiny databází
-    initActItems();                                         // inicializace pole reprezentujícího seznam parametrů z pole "item" tabulky "activities"
-
+    
     foreach ($instCommonOuts as $tab => $common) {
         switch ($common) {
             case 0: ${"common".ucfirst($tab)}=false; break; // záznamy v tabulce budou indexovány pro každou instanci zvlášť
@@ -358,12 +365,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["crmFields", "title"]:$colVals[] = $fieldRow["title"] = $hodnota;         // hodnota záznamu do pole formulářových polí
                                                     break;
                         case ["crmFields", "name"]: $fieldRow["name"] = $hodnota;                       // název klíče záznamu do pole formulářových polí
-                                                    break;                                              // sloupec "name" se nepropisuje do výstupní tabulky "fields"                      
-                        case ["actItems", "idactitem"]:
-                                                    $actItemRow["idactitem"] = $hodnota;               // idactitem z OUT bucketu se uloží do pracovního 1D-pole a dále se nezpracovává
-                                                    break;
-                        case ["actItems", "name"]:  $actItemRow["name"] = $hodnota;                    // název actItem atributu z OUT bucketu se uloží do pracovního 1D-pole a dále se nezpracovává
-                                                    break;                        
+                                                    break;                                              // sloupec "name" se nepropisuje do výstupní tabulky "fields"                                                                 
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                  
                         default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
                     }
@@ -379,11 +381,6 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     $fields[$fieldRow["idfield"]]["name"]  = $fieldRow["name"];     // ... provede se přidání prvku <idfield>["name"] => <hodnota> ...
                     $fields[$fieldRow["idfield"]]["title"] = $fieldRow["title"];    // ... a prvku <idfield>["title"] => <hodnota>
                 } 
-                
-                // přidání řádku do pole hodnot z JSONu activities.item $actItems (struktura pole je <name> => <idactitem> )
-                if (!empty($actItemRow["name"]) && !empty($actItemRow["idactitem"])) {  // je-li známé jméno i ID atributu z activities.item... 
-                    $actItems[$actItemRow["name"]] = $actItemRow["idactitem"];      // ... provede se přidání prvku <name> => <idactitem>
-                }
                 
                 $tabOut = ($tab != "crmFields") ? $tab : "fields";                  // záznamy z in-only tabulky 'crmFields' zapisujeme do in-out tabulky 'fields' 
 
