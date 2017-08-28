@@ -412,6 +412,9 @@ $tabsInOnlyV6  = [
                                 "title"                 => ["instPrf" => 0],
                                 "idinstance"            => ["instPrf" => 0],
                                 "name"                  => ["instPrf" => 0]
+                            ],
+    "actItems"          =>  [   "idactitem"             => ["instPrf" => 0],    // jde o číselník actItems importovaný z OUT bucketu → není třeba ID prefixovat
+                                "name"                  => ["instPrf" => 0]
                             ]
 ];
 $tabsInOnly = [
@@ -435,7 +438,7 @@ $tabsList_InOut = [
     5                   =>  array_keys($tabsInOut[5]),
     6                   =>  array_keys($tabsInOut[6])
 ];
-$tabs_InOut_InOnly = [     // nutno dodržet pořadí spojování polí, aby in-only tabulka crmFields (v6) byla před tabulkami závislými na fields !
+$tabs_InOut_InOnly = [  // nutno dodržet pořadí spojování polí, aby in-only tabulky "crmFields" resp. "actItems" (v6) byly před tabulkami závislými na "fields" resp. "activities" !
     5                   => array_merge($tabsInOnly[5], $tabsInOut[5]),
     6                   => array_merge($tabsInOnly[6], $tabsInOut[6])
 ];

@@ -359,6 +359,11 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     break;
                         case ["crmFields", "name"]: $fieldRow["name"] = $hodnota;                       // název klíče záznamu do pole formulářových polí
                                                     break;                                              // sloupec "name" se nepropisuje do výstupní tabulky "fields"                      
+                        case ["actItems", "idactitem"]:
+                                                    $actItemRow["idactitem"] = $hodnota;               // idactitem z OUT bucketu se uloží do pracovního 1D-pole a dále se nezpracovává
+                                                    break;
+                        case ["actItems", "name"]:  $actItemRow["name"] = $hodnota;                    // název actItem atributu z OUT bucketu se uloží do pracovního 1D-pole a dále se nezpracovává
+                                                    break;                        
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                                  
                         default:                    $colVals[] = $hodnota;          // propsání hodnoty ze vstupní do výstupní tabulky bez úprav (standardní mód)
                     }
@@ -367,13 +372,19 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                 // operace po zpracování dat v celém řádku
 
                 // přidání řádku do pole formulářových polí $fields (struktura pole je <idfield> => ["name" => <hodnota>, "title" => <hodnota>] )
-                if ( !(!strlen($fieldRow["name"]) || !strlen($fieldRow["idfield"]) || !strlen($fieldRow["title"])) ) {  // je-li známý název, title i hodnota záznamu do pole form. polí...          
+                if (!empty($fieldRow["name"]) && !empty($fieldRow["idfield"]) && !empty($fieldRow["title"])) {  // je-li známý název, title i hodnota záznamu do pole form. polí...          
                         /*if ($instId == "3" && ($tab == "crmFields" || $tab == "fields")) {
                         echo "do pole 'fields' přidán záznam (idfield ".$fieldRow["idfield"].", name ".$fieldRow["name"].", title ".$fieldRow["title"].")\n";
                         } */
                     $fields[$fieldRow["idfield"]]["name"]  = $fieldRow["name"];     // ... provede se přidání prvku <idfield>["name"] => <hodnota> ...
                     $fields[$fieldRow["idfield"]]["title"] = $fieldRow["title"];    // ... a prvku <idfield>["title"] => <hodnota>
-                }    
+                } 
+                
+                // přidání řádku do pole hodnot z JSONu activities.item $actItems (struktura pole je <name> => <idactitem> )
+                if (!empty($actItemRow["name"]) && !empty($actItemRow["idactitem"])) {  // je-li známé jméno i ID atributu z activities.item... 
+                    $actItems[$actItemRow["name"]] = $actItemRow["idactitem"];      // ... provede se přidání prvku <name> => <idactitem>
+                }
+                
                 $tabOut = ($tab != "crmFields") ? $tab : "fields";                  // záznamy z in-only tabulky 'crmFields' zapisujeme do in-out tabulky 'fields' 
 
                 if (!empty($colVals)) {                                             // je sestaveno pole pro zápis do řádku výstupní tabulky
