@@ -491,6 +491,9 @@ $idFormat = [
 // delimitery názvu skupiny v queues.idgroup
 $delim = [ "L" => "[[" , "R" => "]]" ];
 
+// defaultní počet znaků pro ořez řetězců hodnot z JSONů (hodnoty form. polí, hodnoty z activities.items)
+$strTrimDefaultLen = 8000;                                  // GD dovolí až 65 535 znaků, někde (např. u activities.items) se vyskytují i delší řetězce!  
+
 // proměnná "action" typu ENUM u campaignRecords - převodní pole číselných kódů akcí na názvy akcí
 $campRecordsActions = [
     "0" => "Not assigned",

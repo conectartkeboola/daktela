@@ -33,6 +33,10 @@ function phoneNumberCanonic ($str) {                    // veřejná tel. čísl
     return (strlen($strConvert) == 9 ? "420" : "") . $strConvert;
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function remStrMultipl ($str, $delimiter = " ") {                               // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
+    return implode($delimiter, array_unique(explode($delimiter, $str)));
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") {      // odebrání nadbytečných mezer a formátovacích znaků z řetězce
     if ($what === NULL) {
         //  character   dec     hexa    use
@@ -50,6 +54,15 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
     $str = str_replace ("|  ", "", $str);                                       // odebrání mezer oddělených "|" zbylých po vícenásobném odřádkování
     $str = str_replace ("\N" , "", $str);                   // zbylé "\N" způsobují chybu importu CSV do výst. tabulek ("Missing data for not-null field")
     return $str;
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function strLenRestrict ($str) {                        // ořezání velmi dlouhých řetězců, např. hodnoty form. polí (GD dovolí max. 65 535 znaků)
+    global $strTrimDefaultLen;
+    return strlen($str) <= $strTrimDefaultLen ? $str : substr($str, 0, $strTrimDefaultLen)." ... (zkráceno)";
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function remStrMultipl_trimAll_stripTags_strLenRestrict ($str) {                // čtyřkombinace uvedených fcí (pro účely normalizace hodnot parsovyných z JSONů)
+    return remStrMultipl(trim_all(strip_tags(strLenRestrict($str))));           // strip_tags ... standardní PHP fce pro odebrání HTML tagů
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function substrInStr ($str, $substr) {                                          // test výskytu podřetězce v řetězci
@@ -80,14 +93,6 @@ function convertAddr ($str) {                                                   
         }
     }
     return implode(" ", $addrArrOut);
-}
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function remStrMultipl ($str, $delimiter = " ") {                               // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
-    return implode($delimiter, array_unique(explode($delimiter, $str)));
-}
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function replaceInvalidUtf8Chars ($str) {
-    return mb_convert_encoding($str, 'UTF-8', 'UTF-8');
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function convertDate ($dateStr) {                                               // konverze data různého (i neznámého) formátu na požadovaný formát
@@ -225,10 +230,6 @@ function checkIdLengthOverflow ($val) {     // kontrola, zda došlo (true) nebo 
     return false;                           // nedošlo k přetečení (OK)
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function strLenRestrict ($str, $maxLen) {   // ořezání velmi dlouhých řetězců, např. hodnoty form. polí (GD dovolí max. 65 535 znaků)
-    return strlen($str) <= $maxLen ? $str : substr($str, 0, $maxLen)." ... (zkráceno)";
-}
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function getJsonItem ($str, $key) {         // získání konkrétního prvku z JSON řetězce
     $decod = json_decode($str, true, JSON_UNESCAPED_UNICODE);                   // dekódovaný řetězec (je-li $str JSON, je $decod ARRAY)
     if (is_null ($decod)) {return [];}                                          // neobsahuje-li JSON žádné položky <> NULL, vrátí prázdné pole
@@ -253,15 +254,11 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
         if (array_key_exists($keyChained, $actItems)) {
             $idactitem = $actItems[$keyChained];                            // název parametru z activities.item byl nalezen v poli $actItems     
         } else {                                                            // název parametru z activities.item nebyl nalezen v poli $actItems
-            $idactitem = setIdLength(0, count($actItems) + 1, false);
+            $idactitem = setIdLength(0, count($actItems) + 1, false);       // parametr z activities.item přidávaný na seznam bude mít ID o 1 vyšší než je stávající počet prvků $actItems
             $actItems[$keyChained] = $idactitem;                            // přidání definice parametru z activities.item do pole $actItems
             $out_actItems -> writeRow([$idactitem, $keyChained]);           // přidání definice parametru z activities.item do out-only tabulky "actItems"
         } // --------------------------------------------------------------------------------------------------------------------------------         
-        //$val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
-        $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
-        $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-        $val = strip_tags($val);
-        $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty!        
+        $val = remStrMultipl_trimAll_stripTags_strLenRestrict($val);        // normalizovaná hodnota - bez multiplicitního výskytu podřetězců, přebytečných mezer, HTML tagů, ořezaná
         $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity . $idactitem,                                       // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity,                                                    // ID zdrojové aktivity obsahující parsovaný JSON
@@ -280,13 +277,9 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
         $idVal = 0;                                                             // ID hodnoty konkrétního form. pole
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí                                                   
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
-            $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
-            $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-        //    $val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
-            $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty! 
+            $val = remStrMultipl_trimAll_stripTags_strLenRestrict($val);        // normalizovaná hodnota - bez multiplicitního výskytu podřetězců, přebytečných mezer, HTML tagů, ořezaná
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
-            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíčových slovech $keywords, ...
-                                                                                // ... vrátí validovanou/konvertovanou hodnotu $val, jinak nezměněnou $val                                                            
+            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíč. slovech $keywords, vrátí validovanou/konvertovanou hodnotu, jinak nezměněnou $val                                                          
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
             // ----------------------------------------------------------------------------------------------------------------------------------
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
