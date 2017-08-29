@@ -260,7 +260,7 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
         //$val = replaceInvalidUtf8Chars($val);                               // ošetření výskytu nevalidních UTF-8 znaků (např. HTML tagů)
         $val = remStrMultipl($val);                                         // value (hodnota form. pole zbavená multiplicitního výskytu podřetězců)
         $val = trim_all($val);                                              // value (hodnota form. pole zbavená nadbyteč. mezer a formátovacích znaků)
-        $val = iconv("UTF-8", "UTF-8//IGNORE", $val);
+        $val = strip_tags($val);
         $val = strLenRestrict($val, 8000);                                  // omezení počtu znaků - GD dovolí až 65 535, někde se vyskytují i delší hodnoty!        
         $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity . $idactitem,                                       // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
