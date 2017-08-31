@@ -33,6 +33,10 @@ function phoneNumberCanonic ($str) {                    // veřejná tel. čísl
     return (strlen($strConvert) == 9 ? "420" : "") . $strConvert;
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function containsHtml ($str) {                          // test, zda textový řetězec obsahuje HTML tagy
+    return $str != strip_tags($str) ? true : false;     // strip_tags ... standardní PHP fce pro odebrání HTML tagů
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function remStrMultipl ($str, $delimiter = " ") {                               // převod multiplicitních podřetězců v řetězci na jeden výskyt podřetězce
     return strlen($str)> 99  ? $str : implode($delimiter, array_unique(explode($delimiter, $str)));  // řetězce delší než 99 znaků (zpravidla těla e-mailů) se neupravují
 }
@@ -56,17 +60,14 @@ function trim_all ($str, $what = NULL, $thrownWith = " ", $replacedWith = "| ") 
     return $str;
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function htmlDrop ($str) {
-    return strip_tags(html_entity_decode($str));            // strip_tags ... standardní PHP fce pro odebrání HTML tagů
-}
-// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function strLenRestrict ($str) {                            // ořezání velmi dlouhých řetězců, např. hodnoty form. polí (GD dovolí max. 65 535 znaků)
     global $strTrimDefaultLen;
     return strlen($str) <= $strTrimDefaultLen ? $str : substr($str, 0, $strTrimDefaultLen)." ... (zkráceno)";
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function htmlDrop_trimAll_remStrMultipl_strLenRestrict ($str) {                 // čtyřkombinace uvedených fcí (pro účely normalizace hodnot parsovyných z JSONů)
-    return htmlDrop(trim_all(remStrMultipl(strLenRestrict($str))));
+function htmlThrow_remStrMultipl_trimAll_strLenRestrict ($str) {                // čtyřkombinace uvedených fcí (pro účely normalizace hodnot parsovyných z JSONů)
+    $strOut = remStrMultipl(trimAll(strLenRestrict($str)));
+    return containsHtml($str) ? "" : $strOut;                                   // místo řetězců obsahujících HTML (těla e-mailů apod.) vrátí prázdný řetězec
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function substrInStr ($str, $substr) {                                          // test výskytu podřetězce v řetězci
@@ -262,7 +263,8 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
             $actItems[$keyChained] = $idactitem;                            // přidání definice parametru z activities.item do pole $actItems
             $out_actItems -> writeRow([$idactitem, $keyChained]);           // přidání definice parametru z activities.item do out-only tabulky "actItems"
         } // --------------------------------------------------------------------------------------------------------------------------------         
-        $val = htmlDrop_trimAll_remStrMultipl_strLenRestrict($val);         // normalizovaná hodnota - bez multiplicitního výskytu podřetězců, přebytečných mezer, HTML tagů, ořezaná
+        $val = htmlThrow_remStrMultipl_trimAll_strLenRestrict($val);        // normalizovaná hodnota - vyřazeny texty obsahující HTML, bez multiplicitního výskytu podřetězců, přebytečných mezer, ořezaná
+        if (empty($val)) {continue;}                                        // vyřazení prázdných hodnot (např. hodnoty obsahující HTML byly nahrazeny prázdným řetězcem)
         $actItemVals = [                                                    // záznam do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity . $idactitem,                                       // ID cílového záznamu do out-only tabulky hodnot z activities.item ("actItemVals")
             $idactivity,                                                    // ID zdrojové aktivity obsahující parsovaný JSON
@@ -281,7 +283,7 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
         $idVal = 0;                                                             // ID hodnoty konkrétního form. pole
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí                                                   
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
-            $val = htmlDrop_trimAll_remStrMultipl_strLenRestrict($val);         // normalizovaná hodnota - bez multiplicitního výskytu podřetězců, přebytečných mezer, HTML tagů, ořezaná
+            $val = htmlThrow_remStrMultipl_trimAll_strLenRestrict($val);        // normalizovaná hodnota - vyřazeny texty obsahující HTML, bez multiplicitního výskytu podřetězců, přebytečných mezer, ořezaná
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
             $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíč. slovech $keywords, vrátí validovanou/konvertovanou hodnotu, jinak nezměněnou $val                                                          
             if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
