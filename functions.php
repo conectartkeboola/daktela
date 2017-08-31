@@ -265,7 +265,7 @@ function jsonParseActivit ($formArr, $parentKey = '') {  // formArr je vícerozm
             $idactitem,                                                     // idactitem
             $val                                                            // korigovaná hodnota parametru z activities.item
         ];                                                                                                                                                                     
-        ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí 
+      //  ${"out_".$jsonFieldsOuts[$tab]} -> writeRow($actItemVals);          // zápis řádku do out-only tabulky hodnot formulářových polí 
     }
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
