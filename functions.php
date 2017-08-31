@@ -66,7 +66,7 @@ function strLenRestrict ($str) {                            // ořezání velmi 
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function htmlThrow_remStrMultipl_trimAll_strLenRestrict ($str) {                // čtyřkombinace uvedených fcí (pro účely normalizace hodnot parsovyných z JSONů)
-    $strOut = remStrMultipl(trimAll(strLenRestrict($str)));
+    $strOut = remStrMultipl(trim_all(strLenRestrict($str)));
     return containsHtml($str) ? "" : $strOut;                                   // místo řetězců obsahujících HTML (těla e-mailů apod.) vrátí prázdný řetězec
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
