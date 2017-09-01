@@ -183,6 +183,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                     switch ([$tab, $colName]) {
                         // TABULKY V5+6
                         case ["users", "login"]:    $colVals[] = convertLogin($hodnota);                        // je-li loginem (v Daktele users.name) x-kód (platí u Daktely v6), odstraní se počáteční "x"
+                                                    break;
                         case ["pauses", "paid"]:    $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
                         case ["queues", "idgroup"]: $groupName = groupNameParse($hodnota);                      // název skupiny parsovaný z queues.idgroup pomocí delimiterů
