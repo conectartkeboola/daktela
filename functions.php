@@ -140,6 +140,10 @@ function convertFieldValue ($idfield, $val) {                                   
     return $val;        // hodnota nepodléhající validaci a korekci (žádná část title form. pole není v $keywords[$valType]
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+function convertLogin ($str) {                                                  // je-li loginem (v Daktele users.name) x-kód (platí u Daktely v6), odstraní se počáteční "x"
+    return preg_match("/x[0-9]{5}/", $str) ? preg_replace("/^x/", "", $str) : $str;
+}
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function boolValsUnify ($val) {         // dvojici booleovských hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5 (lze použít u booleovských atributů)
     global $inst;
     switch ($inst["ver"]) {

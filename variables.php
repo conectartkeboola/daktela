@@ -66,7 +66,8 @@ $tabsInOutV56_part1 = [
     "users"             =>  [   "iduser"                =>  ["instPrf" => 1, "pk" => 1],
                                 "title"                 =>  ["instPrf" => 0, "tt" => 1],
                                 "idinstance"            =>  ["instPrf" => 0, "fk" => "instances"],
-                                "email"                 =>  ["instPrf" => 0]
+                                "email"                 =>  ["instPrf" => 0],
+                                "login"                 =>  ["instPrf" => 0]
                             ],
     "pauses"            =>  [   "idpause"               =>  ["instPrf" => 1, "pk" => 1],
                                 "title"                 =>  ["instPrf" => 0],
