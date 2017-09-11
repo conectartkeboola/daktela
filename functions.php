@@ -141,7 +141,7 @@ function convertFieldValue ($idfield, $val) {                                   
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function convertLogin ($str) {                                                  // je-li loginem (v Daktele users.name) x-kód (platí u Daktely v6), odstraní se počáteční "x"
-    return preg_match("/x[0-9]{5}/", $str) ? preg_replace("/^x/", "", $str) : $str;
+    return preg_match("/^[xX][0-9]{5}$/", $str) ? preg_replace("/^[xX]/", "", $str) : $str;
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function boolValsUnify ($val) {         // dvojici booleovských hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5 (lze použít u booleovských atributů)
