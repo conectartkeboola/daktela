@@ -31,7 +31,8 @@ $histDays          = $incrementalMode['histDays'];          // datum. rozsah his
         "1": true,
         "2": true,
         "3": true,
-        "4": true
+        "4": true,
+        "5": true
       },
       "jsonParse": {
         "activities.item_parseNestedAttrs": false 
