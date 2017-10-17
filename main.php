@@ -261,7 +261,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------                                          
                         // TABULKY V6 ONLY
                         case ["databases", "iddatabasegroup"]:                                                  // v IN bucketu má sloupec název "description"
-                                                    $dbGroupName = groupNameParse($hodnota);                    // název skupiny databází parsovaný z databases.description pomocí delimiterů
+                                                    $dbGroupName = groupNameParse($hodnota, true);              // název skupiny databází parsovaný z databases.description pomocí delimiterů
                                                     if (!strlen($dbGroupName)) {                                // název skupiny databází ve vstupní tabulce 'databases' nevyplněn ...
                                                         $colVals[] = "";  break;                                // ... → ID skupiny databází se do výstupní tabulky 'databases' nezapíše
                                                     }                                                           // (místo '!strlen' nelze použít 'empty' kvůli vyhodnocení $fakeId = '0')
