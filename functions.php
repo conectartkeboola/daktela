@@ -22,8 +22,8 @@ function logInfo ($text, $dumpLevel="basicStatusInfo") {// volitelné diagnostic
 }
 // ==============================================================================================================================================================================================
 function groupNameParse ($str) {                        // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
-    global $delim, $fakeId;
-    if ($str == $fakeId) {return $fakeId;}              // funkce zachovává $fakeId (nutné např. u parsování "databases"."iddatabasegroup")
+    global $delim, $emptyToNA, $fakeId;
+    if ($emptyToNA && $str==$fakeId) {return $fakeId;}  // funkce zachovává $fakeId (nutné např. u parsování "databases"."iddatabasegroup")
     $match = [];                                        // "match array"
     preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $str, $match);
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
@@ -172,8 +172,8 @@ function initGroups () {                // nastavení výchozích hodnot proměn
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function initDbGroups () {              // nastavení výchozích hodnot proměnných popisujících skupiny
-    global $dbGroups, $idDbGroup, $tabItems;
-    $dbGroups             = [];         // 1D-pole skupin databází - prvek pole má tvar dbGroupName => iddatabasegroup
+    global $dbGroups, $idDbGroup, $tabItems, $emptyToNA, $fakeId;
+    $dbGroups = $emptyToNA?[$fakeId]:[];// 1D-pole skupin databází - prvek pole má tvar dbGroupName => iddatabasegroup
     $idDbGroup            = 0;          // umělý inkrementální index pro číslování skupin databází
     $tabItems["dbGroups"] = 0;          // vynulování počitadla záznamů v tabulce 'groups'
 }
