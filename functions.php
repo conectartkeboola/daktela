@@ -22,12 +22,10 @@ function logInfo ($text, $dumpLevel="basicStatusInfo") {// volitelné diagnostic
 }
 // ==============================================================================================================================================================================================
 function groupNameParse ($str, $emptyReplNA = false) {  // separace názvu skupiny jako podřetězce ohraničeného definovanými delimitery z daného řetězce
-    global $delim, $emptyToNA, $fakeId;                 // $emptyReplNA ... volitelný spínač zachovávání hodnot $fakeId
-    if ($emptyReplNA && $emptyToNA && $str==$fakeId) {
-        return $fakeId;                                 // funkce VOLITELNĚ zachovává $fakeId (nutné např. u parsování databases.iddatabasegroup) ...
-    }                                                   // ... (DEFAULTNĚ $fakeId nezachovává)
+    global $delim, $emptyToNA, $fakeId;                 // $emptyReplNA ... volitelný spínač zachovávání hodnot $fakeId + vkládání $fakeId u hodnot prázdných po parsování
     $match = [];                                        // "match array"
     preg_match("/".preg_quote($delim["L"])."(.*?)".preg_quote($delim["R"])."/s", $str, $match);
+    if ($emptyReplNA && $emptyToNA && empty($match[1])) {return $fakeId;}
     return empty($match[1]) ?  "" : $match[1];          // $match[1] obsahuje podřetězec ohraničený delimitery ($match[0] dtto včetně delimiterů)
 }
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
