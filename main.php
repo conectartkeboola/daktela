@@ -262,9 +262,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         // TABULKY V6 ONLY
                         case ["databases", "iddatabasegroup"]:                                                  // v IN bucketu má sloupec název "description"
                                                     $dbGroupName = groupNameParse($hodnota);                    // název skupiny databází parsovaný z databases.description pomocí delimiterů
-                                                    if (empty($dbGroupName)) {                                  // název skupiny databází ve vstupní tabulce 'databases' nevyplněn ...
+                                                    if (!strlen($dbGroupName)) {                                // název skupiny databází ve vstupní tabulce 'databases' nevyplněn ...
                                                         $colVals[] = "";  break;                                // ... → ID skupiny databází se do výstupní tabulky 'databases' nezapíše
-                                                    }  
+                                                    }                                                           // (místo '!strlen' nelze použít 'empty' kvůli vyhodnocení $fakeId = '0')
                                                     if (!array_key_exists($dbGroupName, $dbGroups)) {           // skupina databází daného názvu dosud není uvedena v poli $dbGroups 
                                                         $idDbGroup++;                                           // inkrement umělého ID skupiny databází   
                                                         if (checkIdLengthOverflow($idDbGroup)) {                // došlo k přetečení délky ID určené proměnnou $idDbGroup
