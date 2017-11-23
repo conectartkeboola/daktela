@@ -145,7 +145,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         // iterace tabulek dané instance --------------------------------------------------------------------------------------------------------------------------------------------------------
         foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {               // iterace tabulek dané instance
             $dateRestrictColId = dateRestrictColId($instId, $tab);                  // ID sloupce, který je v dané tabulce atributem pro datumovou restrikci (0,1,...), pokud v tabulce existuje (jinak NULL)
-            if (!$inst["instOn"] && !is_null($dateRestrictColId2)) {                // jde o dynamickou tabulku v instanci vypnuté v konfiguračním JSONu
+            if (!$inst["instOn"] && !is_null($dateRestrictColId)) {                 // jde o dynamickou tabulku v instanci vypnuté v konfiguračním JSONu
                 logInfo("ZPRACOVÁNÍ TABULKY ".$instId."_".$tab." VYPNUTO V JSON");  // volitelný diagnostický výstup do logu 
                 continue;
             }
