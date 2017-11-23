@@ -4,23 +4,20 @@
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // datumový rozsah zpracování
 $processedDates     =   [   "start" =>  date("Y-m-d", strtotime(-$histDays['start']." days")),  // počáteční datum zpracováváného rozsahu
-                            "end"   =>  date("Y-m-d", strtotime(-$histDays['end']  ." days"))       // koncové datum zpracovávaného rozsahu
+                            "end"   =>  date("Y-m-d", strtotime(-$histDays['end']  ." days"))   // koncové datum zpracovávaného rozsahu
                         ];
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // seznam instancí Daktela
-$instancesList = [  "1" =>  ["url" => "https://ilinky.daktela.com",             "ver" => 5],
-                    "2" =>  ["url" => "https://dircom.daktela.com",             "ver" => 5],
-                    "3" =>  ["url" => "https://conectart.daktela.com",          "ver" => 6],
-                    "4" =>  ["url" => "https://conectart-in.daktela.com",       "ver" => 6],
-                    "5" =>  ["url" => "https://conectart-offsite.daktela.com",  "ver" => 6]
+$instances = [  1 =>  ["url" => "https://ilinky.daktela.com",             "ver" => 5, "instOn" => NULL],
+                2 =>  ["url" => "https://dircom.daktela.com",             "ver" => 5, "instOn" => NULL],
+                3 =>  ["url" => "https://conectart.daktela.com",          "ver" => 6, "instOn" => NULL],
+                4 =>  ["url" => "https://conectart-in.daktela.com",       "ver" => 6, "instOn" => NULL],
+                5 =>  ["url" => "https://conectart-offsite.daktela.com",  "ver" => 6, "instOn" => NULL]
 ];
-// z pole $instancesList se do pole $instances vyberou jen definice instancí, které mají v konfiguračním JSONu zapnuté zpracování:
-$instances = [];
-foreach ($instancesList as $instId => $instAttrs) {     // $instId = "1", "2", ... (typ STRING - vyžaduje to konfigurační JSON v KBC)
-    if (!empty($processedInstances[$instId])) {         // vstupní hodnota false se vyhodnotí jako empty :)
-        $instances[(int)$instId] = $instAttrs;          // (int) ... výstupní pole $instances má klíče číslované typem INT
-    }    
-}
+//  poli $instances se nastaví hodnota klíče"instOn" na true/false podle toho, jak mají instance v konfiguračním JSONu zapnuté/vypnuté zpracování:
+foreach ($instances as $instId => $instAttrs) {
+    $instances[$instId]["instOn"] = empty($processedInstances[$instId]) ? false : true;         // vstupní hodnota false se vyhodnotí jako empty :)
+}                                                                                               // "vypnutí" zpracovávání dané instanceznamená, že se zpracovávájí jen statické tabulky
 // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // struktura tabulek
 
