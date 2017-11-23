@@ -144,17 +144,19 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
         
         // iterace tabulek dané instance --------------------------------------------------------------------------------------------------------------------------------------------------------
         foreach ($tabs_InOut_InOnly[$inst["ver"]] as $tab => $cols) {               // iterace tabulek dané instance
+            $dateRestrictColId = dateRestrictColId($instId, $tab);                  // ID sloupce, který je v dané tabulce atributem pro datumovou restrikci (0,1,...), pokud v tabulce existuje (jinak NULL)
+            if (!$inst["instOn"] && !is_null($dateRestrictColId2)) {                // jde o dynamickou tabulku v instanci vypnuté v konfiguračním JSONu
+                logInfo("ZPRACOVÁNÍ TABULKY ".$instId."_".$tab." VYPNUTO V JSON");  // volitelný diagnostický výstup do logu 
+                continue;
+            }
             logInfo("ZAHÁJENO ZPRACOVÁNÍ TABULKY ".$instId."_".$tab);               // volitelný diagnostický výstup do logu           
             // iterace řádků dané tabulky -------------------------------------------------------------------------------------------------------------------------------------------------------
             foreach (${"in_".$tab."_".$instId} as $rowNum => $row) {                // načítání řádků vstupních tabulek [= iterace řádků]
                 if ($rowNum == 0) {continue;}                                       // vynechání hlavičky tabulky
                 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-                // při inkrementáním módu pro všechny nestatické tabulky (tj. nejen "calls" a "activities") přeskočení záznamů ležících mimo zpracovávaný datumový rozsah 
-                if (!$incrCallsOnly) {                                              // inkrementálně zpracováváme všechny nestatické tabulky, nejen "calls" a "activities"
-                    $dateRestrictColId = dateRestrictColId($instId, $tab);          // ID sloupce, který je v dané tabulce atributem pro datumovou restrikci (0,1,...), pokud v tabulce existuje
-                    if (!is_null($dateRestrictColId)) {                             // sloupec pro datumovou restrikci záznamů v tabulce existuje
-                        if (!dateRngCheck($row[$dateRestrictColId])) {continue;}    // hodnota atributu pro datumovou restrikci leží mimo zpracovávaný datumový rozsah → přechod na další řádek           
-                    }          
+                // při inkrementáním módu zpracování pro všechny nestatické tabulky (tj. nejen "calls" a "activities") přeskočení záznamů ležících mimo zpracovávaný datumový rozsah 
+                if (!$incrCallsOnly && !is_null($dateRestrictColId)) {              // inkrementálně zpracováváme všechny nestatické tabulky && sloupec pro datumovou restrikci záznamů v tabulce existuje
+                    if (!dateRngCheck($row[$dateRestrictColId])) {continue;}        // hodnota atributu pro datumovou restrikci leží mimo zpracovávaný datumový rozsah → přechod na další řádek                  
                 } 
                 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
                 $tabItems[$tab]++;                                                  // inkrement počitadla záznamů v tabulce
