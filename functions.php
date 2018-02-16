@@ -289,9 +289,7 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
         foreach ($valArr as $val) {                                             // klíč = 0,1,... (nezajímavé); $val jsou hodnoty form. polí                                                   
             // optimalizace hodnot formulářových polí, vyřazení prázdných hodnot
             $val = htmlThrow_remStrMultipl_trimAll_strLenRestrict($val);        // normalizovaná hodnota - vyřazeny texty obsahující HTML, bez multiplicitního výskytu podřetězců, přebytečných mezer, ořezaná
-            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi                                                                                   
-            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíč. slovech $keywords, vrátí validovanou/konvertovanou hodnotu, jinak nezměněnou $val                                                          
-            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
+            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola před korekcemi
             // ----------------------------------------------------------------------------------------------------------------------------------
             // validace a korekce hodnoty formulářového pole + konstrukce řádku out-only tabulky hodnot formulářových polí
             $idVal++;                                                           // inkrement umělého ID hodnot formulářových polí
@@ -325,7 +323,11 @@ function jsonParse ($formArr) {             // formArr je 2D-pole
                         $idfield = $idfi; break;
                     }
                 }
-            } // --------------------------------------------------------------------------------------------------------------------------------                                                              
+            } // --------------------------------------------------------------------------------------------------------------------------------
+            // zde už je známa hodnota $idfield pro aktuálně iterované formulářové pole
+            $val = convertFieldValue($idfield, $val);                           // je-li část názvu klíče $key v klíč. slovech $keywords, vrátí validovanou/konvertovanou hodnotu, jinak nezměněnou $val                                                          
+            if (!strlen($val)) {continue;}                                      // prázdná hodnota prvku formulářového pole - kontrola po korekcích
+            // ----------------------------------------------------------------------------------------------------------------------------------
             $fieldVals = [                                                      // záznam do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec . $idfield . setIdLength(0,$idVal,false,"field"),// ID cílového záznamu do out-only tabulky hodnot formulářových polí
                 $idFieldSrcRec,                                                 // ID zdrojového záznamu z tabulky obsahující parsovaný JSON
