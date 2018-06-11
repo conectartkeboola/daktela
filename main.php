@@ -209,8 +209,10 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                         continue 3;                                             // ... řádek z tabulky 'calls' přeskočíme
                                                     } else {                                                    // 'call_time' je z požadovaného rozsahu -> ...
                                                         $colVals[] = $hodnota; break;                           // ... 'call_time' použijeme a normálně pokračujeme v konstrukci řádku...
-                                                    }
+                                                    }                        
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
+                                                    break;
+                        case ["calls", "idrecord"]: $colVals[] = emptyToNA("");                                 // u v5 jsou v calls.idrecord všude prázdné hodnoty
                                                     break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -316,6 +318,9 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                         case ["activities", "iduser"]:
                                                     $colVals[]= $iduser = $hodnota; // $iduser  ... pro použití v case ["activities", "item"]
                                                     break;
+                        case ["activities", "idrecord"]:
+                                                    $colVals[]= $idrecord =$hodnota;// $idrecord  ... pro použití v case ["activities", "item"]
+                                                    break;
                         case ["activities", "idstatus"]:
                                                     $colVals[] = $commonStatuses ? setIdLength(0, iterStatuses($hodnota), false) : $hodnota;
                                                     break;
@@ -339,6 +344,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                                     boolValsUnify($item["answered"]),
                                                                     emptyToNA($idqueue),
                                                                     emptyToNA($iduser),
+                                                                    emptyToNA($idrecord),
                                                                     phoneNumberCanonic($item["clid"]),
                                                                     emptyToNA(setIdLength($instId, $item["contact"]["_sys"]["id"])),
                                                                     $item["did"],
