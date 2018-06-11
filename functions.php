@@ -347,7 +347,7 @@ function jsonProcessing ($instId, $tab, $colName, $hodnota) {                   
         if (array_key_exists($tab, $jsonList[$instId])) {
             if (array_key_exists($colName, $jsonList[$instId][$tab])) {         // sloupec obsahuje JSON
                 $formArr = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
-                if (!is_null($formArr)) {                                       // hodnota dekódovaného JSONu není NULL → lze ji prohledávat jako pole  
+                if (is_array($formArr)) {                                       // hodnota dekódovaného JSONu je pole → lze ji prohledávat jako pole (pův. podmínka jen !is_null)
                     switch ($tab) {
                       case "activities":  jsonParseActivit($formArr); break;    // uplatní se u tabulky "activities"
                       default:            jsonParse($formArr);                  // uplatní se u tabulek "records", "crmRecords", "contact" a "tickets"

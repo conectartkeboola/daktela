@@ -212,7 +212,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     }                        
                         case ["calls", "answered"]: $colVals[] = boolValsUnify($hodnota);                       // dvojici bool. hodnot ("",1) u v6 převede na dvojici hodnot (0,1) používanou u v5                                 
                                                     break;
-                        case ["calls", "idrecord"]: $colVals[] = emptyToNA("");                                 // u v5 jsou v calls.idrecord všude prázdné hodnoty
+                        case ["calls", "idrecord"]: $colVals[] = emptyToNA($hodnota);                           // u v5 jsou v calls.idrecord všude prázdné hodnoty
                                                     break;
                         case ["calls", "clid"]:     $colVals[] = phoneNumberCanonic($hodnota);                  // veřejné tel. číslo v kanonickém tvaru (bez '+')
                                                     break;
@@ -330,7 +330,7 @@ while (!$idFormatIdEnoughDigits) {      // dokud není potvrzeno, že počet č�
                                                     if ($type != "CALL") {break;}   // pro aktivity typu != CALL nepokračovat sestavením hodnot do tabulky 'calls'
                                                     
                                                     $item = json_decode($hodnota, true, JSON_UNESCAPED_UNICODE);
-                                                    if (is_null($item)) {break;}    // hodnota dekódovaného JSONu je null → nelze ji prohledávat jako pole
+                                                    if (!is_array($item)) {break;}  // hodnota dekódovaného JSONu není pole (např. je null) → nelze ji prohledávat jako pole (pův. podmínka jen is_null)
                                                                                         
                                                     if (array_key_exists("call_time", $item)) {
                                                         if (!dateRngCheck($item["call_time"])) {continue 3;}// 'call_time' není z požadovaného rozsahu → řádek z tabulky 'activities' přeskočíme                                                    
