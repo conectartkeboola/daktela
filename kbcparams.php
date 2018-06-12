@@ -24,18 +24,18 @@ $histDays          = $incrementalMode['histDays'];          // datum. rozsah his
         "incrCallsOnly": true,
         "histDays": {
           "start": 3,
-          "end":   0
+          "end": 0
         }
       },
       "processedInstances": {
-        "1": true,
-        "2": true,
+        "1": false,
+        "2": false,
         "3": true,
         "4": true,
         "5": true
       },
       "jsonParse": {
-        "activities.item_parseNestedAttrs": false 
+        "activities.item_parseNestedAttrs": false
       },
       "diagOutOptions": {
         "basicStatusInfo": true,
@@ -45,6 +45,6 @@ $histDays          = $incrementalMode['histDays'];          // datum. rozsah his
         "active": false,
         "idFieldSrcRec": "301121251"
       }
-   }
+    }
   -> podrobnosti viz https://developers.keboola.com/extend/custom-science
 */
