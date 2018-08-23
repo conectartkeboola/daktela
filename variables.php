@@ -54,8 +54,9 @@ $tabsInOutV56_part1 = [
     "queues"            =>  [   "idqueue"               =>  ["instPrf" => 1, "pk" => 1],
                                 "title"                 =>  ["instPrf" => 0, "tt" => 1],
                                 "idinstance"            =>  ["instPrf" => 0, "fk" => "instances"],
-                                "idgroup"               =>  ["instPrf" => 0, "fk" => NULL]    // "fk" => "groups" neuvedeno ("groups" je out-only tabulka vytvářená v transformaci z "queues")
-                            ],                                                  // "idgroup" je v IN tabulce NÁZEV → neprefixovat
+                                "idgroup"               =>  ["instPrf" => 0, "fk" => NULL],     // "fk" => "groups" neuvedeno ("groups" je out-only tabulka vytvářená v transformaci z "queues")
+                                "outboundcid"           =>  ["instPrf" => 0]
+                            ],                                                                  // "idgroup" je v IN tabulce NÁZEV → neprefixovat
     "fields"            =>  [   "idfield"               =>  ["instPrf" => 1, "pk" => 1],
                                 "title"                 =>  ["instPrf" => 0, "tt" => 1],
                                 "idinstance"            =>  ["instPrf" => 0, "fk" => "instances"],
